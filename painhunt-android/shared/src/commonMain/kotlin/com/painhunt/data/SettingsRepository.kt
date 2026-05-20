@@ -9,7 +9,7 @@ class SettingsRepository(private val client: SupabaseClient) {
     suspend fun get(): AppSettings =
         client.from("settings").select().decodeSingle()
 
-    suspend fun update(model: String, minUpvotes: Int, scraperBaseUrl: String) {
+    suspend fun update(id: String, model: String, minUpvotes: Int, scraperBaseUrl: String) {
         client.from("settings").update(
             mapOf(
                 "ollama_model" to model,
@@ -17,13 +17,13 @@ class SettingsRepository(private val client: SupabaseClient) {
                 "scraper_base_url" to scraperBaseUrl,
             )
         ) {
-            filter { gt("id", "") }
+            filter { eq("id", id) }
         }
     }
 
-    suspend fun updateApiKey(apiKey: String) {
+    suspend fun updateApiKey(id: String, apiKey: String) {
         client.from("settings").update(mapOf("ollama_api_key" to apiKey)) {
-            filter { gt("id", "") }
+            filter { eq("id", id) }
         }
     }
 }

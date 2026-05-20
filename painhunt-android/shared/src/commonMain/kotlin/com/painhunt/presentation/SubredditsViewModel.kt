@@ -27,7 +27,7 @@ class SubredditsViewModel(
 
     fun load() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isLoading = true, error = null) }
             try {
                 _uiState.update { it.copy(subreddits = subredditsRepository.getAll(), isLoading = false) }
             } catch (e: Exception) {
@@ -38,22 +38,34 @@ class SubredditsViewModel(
 
     fun add(name: String) {
         viewModelScope.launch {
-            subredditsRepository.add(name)
-            load()
+            try {
+                subredditsRepository.add(name)
+                load()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
         }
     }
 
     fun remove(id: String) {
         viewModelScope.launch {
-            subredditsRepository.remove(id)
-            load()
+            try {
+                subredditsRepository.remove(id)
+                load()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
         }
     }
 
     fun setActive(id: String, active: Boolean) {
         viewModelScope.launch {
-            subredditsRepository.setActive(id, active)
-            load()
+            try {
+                subredditsRepository.setActive(id, active)
+                load()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
         }
     }
 }

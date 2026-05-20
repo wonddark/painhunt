@@ -38,10 +38,16 @@ class SettingsViewModel(
     }
 
     fun save(model: String, minUpvotes: Int, apiKey: String, scraperUrl: String) {
+        val id = _uiState.value.settings?.id ?: return
         viewModelScope.launch {
-            settingsRepository.update(model, minUpvotes, scraperUrl)
-            settingsRepository.updateApiKey(apiKey)
-            _uiState.update { it.copy(isSaved = true) }
+            try {
+                settingsRepository.update(id, model, minUpvotes, scraperUrl)
+                settingsRepository.updateApiKey(id, apiKey)
+                _uiState.update { it.copy(isSaved = true) }
+                load()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
         }
     }
 

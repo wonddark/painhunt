@@ -28,7 +28,11 @@ fun SubredditsScreen(viewModel: SubredditsViewModel) {
             }
         }
     ) { padding ->
-        if (state.error != null) {
+        if (state.isLoading && state.subreddits.isEmpty()) {
+            Box(modifier = Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else if (state.error != null) {
             Box(modifier = Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(state.error!!, color = MaterialTheme.colorScheme.error)
