@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { getRedditToken } from '../../src/reddit/auth.js'
 
 vi.stubGlobal('fetch', vi.fn())
 
@@ -13,7 +14,6 @@ describe('getRedditToken', () => {
       json: async () => ({ access_token: 'tok_123', expires_in: 86400 }),
     } as Response)
 
-    const { getRedditToken } = await import('../../src/reddit/auth.js')
     const token = await getRedditToken({
       clientId: 'id',
       clientSecret: 'secret',
@@ -31,7 +31,6 @@ describe('getRedditToken', () => {
       text: async () => 'Unauthorized',
     } as Response)
 
-    const { getRedditToken } = await import('../../src/reddit/auth.js')
     await expect(
       getRedditToken({ clientId: 'id', clientSecret: 'secret', username: 'u', password: 'p' })
     ).rejects.toThrow('Reddit auth failed: 401')

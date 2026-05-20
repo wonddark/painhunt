@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { scorePost } from '../../src/ai/ollama.js'
 
 vi.stubGlobal('fetch', vi.fn())
 
@@ -20,10 +21,13 @@ describe('scorePost', () => {
       json: async () => aiResponse,
     } as Response)
 
-    const { scorePost } = await import('../../src/ai/ollama.js')
-    const result = await scorePost(
-      { title: 'hate tracking expenses', body: 'manually every day', model: 'llama3.2', apiKey: 'key', baseUrl: 'https://api.ollama.com' }
-    )
+    const result = await scorePost({
+      title: 'hate tracking expenses',
+      body: 'manually every day',
+      model: 'llama3.2',
+      apiKey: 'key',
+      baseUrl: 'https://api.ollama.com',
+    })
 
     expect(result).toEqual({
       relevanceScore: 75,
@@ -38,10 +42,13 @@ describe('scorePost', () => {
       json: async () => ({ message: { content: 'not json' } }),
     } as Response)
 
-    const { scorePost } = await import('../../src/ai/ollama.js')
-    const result = await scorePost(
-      { title: 'title', body: 'body', model: 'llama3.2', apiKey: 'key', baseUrl: 'https://api.ollama.com' }
-    )
+    const result = await scorePost({
+      title: 'title',
+      body: 'body',
+      model: 'llama3.2',
+      apiKey: 'key',
+      baseUrl: 'https://api.ollama.com',
+    })
 
     expect(result).toBeNull()
   })
@@ -49,10 +56,13 @@ describe('scorePost', () => {
   it('returns null on fetch error', async () => {
     vi.mocked(fetch).mockRejectedValueOnce(new Error('Network error'))
 
-    const { scorePost } = await import('../../src/ai/ollama.js')
-    const result = await scorePost(
-      { title: 'title', body: 'body', model: 'llama3.2', apiKey: 'key', baseUrl: 'https://api.ollama.com' }
-    )
+    const result = await scorePost({
+      title: 'title',
+      body: 'body',
+      model: 'llama3.2',
+      apiKey: 'key',
+      baseUrl: 'https://api.ollama.com',
+    })
 
     expect(result).toBeNull()
   })

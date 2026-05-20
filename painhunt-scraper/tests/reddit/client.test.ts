@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { fetchSubredditPosts } from '../../src/reddit/client.js'
 
 vi.stubGlobal('fetch', vi.fn())
 
@@ -17,7 +18,6 @@ describe('fetchSubredditPosts', () => {
       .mockResolvedValueOnce({ ok: true, json: async () => newPosts } as Response)
       .mockResolvedValueOnce({ ok: true, json: async () => hotPosts } as Response)
 
-    const { fetchSubredditPosts } = await import('../../src/reddit/client.js')
     const posts = await fetchSubredditPosts('testsubreddit', 'tok_123')
 
     expect(posts).toHaveLength(3) // a1, b1, c1 — a1 deduplicated
@@ -26,7 +26,6 @@ describe('fetchSubredditPosts', () => {
   it('throws on non-ok response', async () => {
     vi.mocked(fetch).mockResolvedValue({ ok: false, status: 403 } as Response)
 
-    const { fetchSubredditPosts } = await import('../../src/reddit/client.js')
     await expect(fetchSubredditPosts('sub', 'tok')).rejects.toThrow('Reddit fetch failed: 403')
   })
 })
