@@ -14,7 +14,7 @@ type RedditListing = {
 async function fetchWithRetry(url: string, attempt = 0): Promise<Response> {
   const res = await fetch(url, {
     headers: {
-      'User-Agent': 'painhunt/1.0 (personal tool)',
+      'User-Agent': 'script:painhunt:v1.0.0 (by /u/Distinct-Loss-2744)',
     },
   })
   if (res.status === 429 && attempt < 3) {
