@@ -15,6 +15,9 @@ class SubredditsRepository(private val client: SupabaseClient) {
     @Serializable
     private data class ActiveUpdate(val active: Boolean)
 
+    @Serializable
+    private data class NameUpdate(val name: String)
+
     suspend fun getAll(): List<Subreddit> =
         client.from("subreddits").select {
             order("added_at", Order.ASCENDING)
@@ -32,6 +35,12 @@ class SubredditsRepository(private val client: SupabaseClient) {
 
     suspend fun setActive(id: String, active: Boolean) {
         client.from("subreddits").update(ActiveUpdate(active)) {
+            filter { eq("id", id) }
+        }
+    }
+
+    suspend fun rename(id: String, name: String) {
+        client.from("subreddits").update(NameUpdate(name.removePrefix("r/").trim())) {
             filter { eq("id", id) }
         }
     }
