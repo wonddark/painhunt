@@ -33,12 +33,16 @@ export type IdeaInsert = {
   ai_category: string
 }
 
+function throwDbError(error: { message: string }): never {
+  throw new Error(error.message)
+}
+
 export async function getActiveSubreddits(): Promise<Subreddit[]> {
   const { data, error } = await client
     .from('subreddits')
     .select()
     .eq('active', true)
-  if (error) throw error
+  if (error) throwDbError(error)
   return data as Subreddit[]
 }
 
@@ -47,7 +51,7 @@ export async function getSettings(): Promise<Settings> {
     .from('settings')
     .select()
     .single()
-  if (error) throw error
+  if (error) throwDbError(error)
   return data as Settings
 }
 
@@ -55,5 +59,5 @@ export async function upsertIdea(idea: IdeaInsert): Promise<void> {
   const { error } = await client
     .from('ideas')
     .upsert(idea, { onConflict: 'reddit_post_id', ignoreDuplicates: true })
-  if (error) throw error
+  if (error) throwDbError(error)
 }
