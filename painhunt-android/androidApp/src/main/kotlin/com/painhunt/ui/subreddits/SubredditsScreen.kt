@@ -108,7 +108,7 @@ fun SubredditsScreen(viewModel: SubredditsViewModel) {
                 OutlinedTextField(
                     value = editName,
                     onValueChange = { editName = it },
-                    label = { Text("Subreddit name") },
+                    label = { Text("Subreddit name (without r/ prefix)") },
                     singleLine = true,
                 )
             },
