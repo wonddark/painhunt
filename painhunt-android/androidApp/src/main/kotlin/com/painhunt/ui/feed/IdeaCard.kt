@@ -26,7 +26,7 @@ fun IdeaCard(idea: Idea, onClick: () -> Unit) {
             Spacer(Modifier.height(4.dp))
             Text(idea.aiSummary, style = MaterialTheme.typography.bodySmall, maxLines = 3, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(6.dp))
-            Text("↑${idea.redditScore} · ${idea.aiCategory}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+            Text("↑${idea.redditScore}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
         }
     }
 }
