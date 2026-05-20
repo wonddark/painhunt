@@ -22,6 +22,7 @@ kotlin {
             implementation(libs.serialization.json)
             implementation(libs.supabase.postgrest)
             implementation(libs.ktor.client.core)
+            implementation(libs.lifecycle.viewmodel)
         }
 
         androidMain.dependencies {
