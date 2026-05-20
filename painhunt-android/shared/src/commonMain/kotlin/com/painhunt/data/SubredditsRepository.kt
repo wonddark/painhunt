@@ -4,8 +4,16 @@ import com.painhunt.domain.Subreddit
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Order
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 class SubredditsRepository(private val client: SupabaseClient) {
+
+    @Serializable
+    private data class SubredditInsert(val name: String)
+
+    @Serializable
+    private data class ActiveUpdate(val active: Boolean)
 
     suspend fun getAll(): List<Subreddit> =
         client.from("subreddits").select {
@@ -13,7 +21,7 @@ class SubredditsRepository(private val client: SupabaseClient) {
         }.decodeList()
 
     suspend fun add(name: String) {
-        client.from("subreddits").insert(mapOf("name" to name.removePrefix("r/").trim()))
+        client.from("subreddits").insert(SubredditInsert(name.removePrefix("r/").trim()))
     }
 
     suspend fun remove(id: String) {
@@ -23,7 +31,7 @@ class SubredditsRepository(private val client: SupabaseClient) {
     }
 
     suspend fun setActive(id: String, active: Boolean) {
-        client.from("subreddits").update(mapOf("active" to active)) {
+        client.from("subreddits").update(ActiveUpdate(active)) {
             filter { eq("id", id) }
         }
     }
