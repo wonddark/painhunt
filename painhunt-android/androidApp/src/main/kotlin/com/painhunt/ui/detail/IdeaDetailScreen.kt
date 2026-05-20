@@ -70,6 +70,16 @@ fun IdeaDetailScreen(
             return@Scaffold
         }
 
+        if (state.error != null && state.idea == null) {
+            Box(
+                modifier = Modifier.padding(padding).fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(state.error!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+            }
+            return@Scaffold
+        }
+
         val idea = state.idea ?: return@Scaffold
 
         Column(
