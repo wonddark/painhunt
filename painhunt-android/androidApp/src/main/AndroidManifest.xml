@@ -4,7 +4,8 @@
     <application
         android:allowBackup="true"
         android:label="PainHunt"
-        android:theme="@style/Theme.PainHunt">
+        android:theme="@style/Theme.PainHunt"
+        android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
             android:exported="true">
