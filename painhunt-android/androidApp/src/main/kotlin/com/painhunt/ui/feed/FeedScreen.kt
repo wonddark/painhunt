@@ -86,7 +86,7 @@ fun FeedScreen(viewModel: FeedViewModel, onIdeaClick: (String) -> Unit) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("No ideas yet", style = MaterialTheme.typography.titleMedium)
                         Spacer(Modifier.height(8.dp))
-                        Button(onClick = viewModel::triggerScrape) { Text("Trigger Scrape") }
+                        Button(onClick = viewModel::triggerScrape, enabled = !state.isScraping) { Text("Trigger Scrape") }
                     }
                 }
             } else {
