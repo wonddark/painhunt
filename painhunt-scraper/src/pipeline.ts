@@ -1,4 +1,3 @@
-import { getRedditToken } from './reddit/auth.js'
 import { fetchSubredditPosts } from './reddit/client.js'
 import { matchesPainSignal } from './filter/keywords.js'
 import { scorePost } from './ai/ollama.js'
@@ -16,18 +15,11 @@ export async function runScrape(): Promise<ScrapeResult> {
     return { inserted: 0, discarded: 0 }
   }
 
-  const token = await getRedditToken({
-    clientId: process.env.REDDIT_CLIENT_ID!,
-    clientSecret: process.env.REDDIT_CLIENT_SECRET!,
-    username: process.env.REDDIT_USERNAME!,
-    password: process.env.REDDIT_PASSWORD!,
-  })
-
   let inserted = 0
   let discarded = 0
 
   for (const subreddit of subreddits) {
-    const posts = await fetchSubredditPosts(subreddit.name, token)
+    const posts = await fetchSubredditPosts(subreddit.name)
 
     for (const post of posts) {
       if (post.score < settings.min_upvotes_threshold) {

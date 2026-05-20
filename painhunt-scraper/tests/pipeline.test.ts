@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { runScrape } from '../src/pipeline.js'
 
-vi.mock('../src/reddit/auth.js', () => ({ getRedditToken: vi.fn().mockResolvedValue('tok') }))
 vi.mock('../src/reddit/client.js', () => ({
   fetchSubredditPosts: vi.fn().mockResolvedValue([
     { id: 'p1', title: 'I wish there was an app for this', selftext: '', score: 15, author: 'u1', permalink: '/r/test/p1' },

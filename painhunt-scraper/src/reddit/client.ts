@@ -11,24 +11,23 @@ type RedditListing = {
   data: { children: Array<{ data: RedditPost }> }
 }
 
-async function fetchWithRetry(url: string, token: string, attempt = 0): Promise<Response> {
+async function fetchWithRetry(url: string, attempt = 0): Promise<Response> {
   const res = await fetch(url, {
     headers: {
-      Authorization: `Bearer ${token}`,
       'User-Agent': 'painhunt/1.0 (personal tool)',
     },
   })
   if (res.status === 429 && attempt < 3) {
-    const delay = Math.pow(2, attempt) * 1000 // 1s, 2s, 4s
+    const delay = Math.pow(2, attempt) * 1000
     await new Promise((r) => setTimeout(r, delay))
-    return fetchWithRetry(url, token, attempt + 1)
+    return fetchWithRetry(url, attempt + 1)
   }
   return res
 }
 
-async function fetchListing(subreddit: string, sort: 'new' | 'hot', token: string): Promise<RedditPost[]> {
-  const url = `https://oauth.reddit.com/r/${subreddit}/${sort}.json?limit=100`
-  const res = await fetchWithRetry(url, token)
+async function fetchListing(subreddit: string, sort: 'new' | 'hot'): Promise<RedditPost[]> {
+  const url = `https://www.reddit.com/r/${subreddit}/${sort}.json?limit=100`
+  const res = await fetchWithRetry(url)
 
   if (!res.ok) {
     throw new Error(`Reddit fetch failed: ${res.status}`)
@@ -38,10 +37,10 @@ async function fetchListing(subreddit: string, sort: 'new' | 'hot', token: strin
   return data.data.children.map((c) => c.data)
 }
 
-export async function fetchSubredditPosts(subreddit: string, token: string): Promise<RedditPost[]> {
+export async function fetchSubredditPosts(subreddit: string): Promise<RedditPost[]> {
   const [newPosts, hotPosts] = await Promise.all([
-    fetchListing(subreddit, 'new', token),
-    fetchListing(subreddit, 'hot', token),
+    fetchListing(subreddit, 'new'),
+    fetchListing(subreddit, 'hot'),
   ])
 
   const seen = new Set<string>()
