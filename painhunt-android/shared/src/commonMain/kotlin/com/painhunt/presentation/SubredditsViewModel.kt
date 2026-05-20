@@ -68,4 +68,15 @@ class SubredditsViewModel(
             }
         }
     }
+
+    fun rename(id: String, name: String) {
+        viewModelScope.launch {
+            try {
+                subredditsRepository.rename(id, name)
+                load()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
+        }
+    }
 }
