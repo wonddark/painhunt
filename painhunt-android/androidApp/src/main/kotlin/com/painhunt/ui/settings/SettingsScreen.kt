@@ -12,6 +12,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.painhunt.presentation.SettingsViewModel
+import kotlinx.coroutines.delay
 
 private val OLLAMA_MODELS = listOf("llama3.2", "llama3.1", "mistral", "phi3", "gemma2")
 
@@ -28,7 +29,10 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
     var modelDropdownOpen by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.isSaved) {
-        if (state.isSaved) viewModel.clearSaved()
+        if (state.isSaved) {
+            delay(2000)
+            viewModel.clearSaved()
+        }
     }
 
     Scaffold(topBar = { TopAppBar(title = { Text("Settings") }) }) { padding ->
