@@ -1,3 +1,5 @@
+import { XMLParser } from 'fast-xml-parser'
+
 export type RedditPost = {
   id: string
   title: string
@@ -7,8 +9,22 @@ export type RedditPost = {
   permalink: string
 }
 
-type RedditListing = {
-  data: { children: Array<{ data: RedditPost }> }
+type AtomEntry = {
+  id: string
+  title: string
+  content: string
+  author: { name: string }
+  link: { '@_href': string }
+}
+
+type AtomFeed = {
+  feed: { entry: AtomEntry | AtomEntry[] }
+}
+
+const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' })
+
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&quot;/g, '"').trim()
 }
 
 async function fetchWithRetry(url: string, attempt = 0): Promise<Response> {
@@ -26,15 +42,33 @@ async function fetchWithRetry(url: string, attempt = 0): Promise<Response> {
 }
 
 async function fetchListing(subreddit: string, sort: 'new' | 'hot'): Promise<RedditPost[]> {
-  const url = `https://www.reddit.com/r/${subreddit}/${sort}.json?limit=100`
+  const url = `https://www.reddit.com/r/${subreddit}/${sort}.rss?limit=100`
   const res = await fetchWithRetry(url)
 
   if (!res.ok) {
     throw new Error(`Reddit fetch failed: ${res.status}`)
   }
 
-  const data = (await res.json()) as RedditListing
-  return data.data.children.map((c) => c.data)
+  const xml = await res.text()
+  const feed = parser.parse(xml) as AtomFeed
+  const entries = Array.isArray(feed.feed.entry) ? feed.feed.entry : [feed.feed.entry]
+
+  return entries.filter(Boolean).map((entry) => {
+    const href: string = entry.link?.['@_href'] ?? ''
+    const permalink = href.replace('https://www.reddit.com', '')
+    const rawId: string = typeof entry.id === 'string' ? entry.id : String(entry.id)
+    const id = rawId.replace('t3_', '').split('_').pop() ?? rawId
+    const authorName: string = typeof entry.author?.name === 'string' ? entry.author.name : ''
+
+    return {
+      id,
+      title: typeof entry.title === 'string' ? entry.title : String(entry.title ?? ''),
+      selftext: stripHtml(typeof entry.content === 'string' ? entry.content : String(entry.content ?? '')),
+      author: authorName.replace('/u/', ''),
+      score: 0,
+      permalink,
+    }
+  })
 }
 
 export async function fetchSubredditPosts(subreddit: string): Promise<RedditPost[]> {

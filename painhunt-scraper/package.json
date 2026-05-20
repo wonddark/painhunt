@@ -9,15 +9,16 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "express": "^5.1.0",
     "@supabase/supabase-js": "^2.49.9",
-    "dotenv": "^16.5.0"
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "fast-xml-parser": "^5.8.0"
   },
   "devDependencies": {
-    "typescript": "^5.8.3",
-    "@types/node": "^22.15.18",
     "@types/express": "^5.0.3",
-    "vitest": "^3.2.2",
-    "tsx": "^4.19.4"
+    "@types/node": "^22.15.18",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.2"
   }
 }

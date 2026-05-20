@@ -22,7 +22,7 @@ export async function runScrape(): Promise<ScrapeResult> {
     const posts = await fetchSubredditPosts(subreddit.name)
 
     for (const post of posts) {
-      if (post.score < settings.min_upvotes_threshold) {
+      if (post.score > 0 && post.score < settings.min_upvotes_threshold) {
         discarded++
         continue
       }
