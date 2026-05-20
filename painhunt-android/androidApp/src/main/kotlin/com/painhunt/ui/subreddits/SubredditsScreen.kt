@@ -6,11 +6,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.painhunt.domain.Subreddit
 import com.painhunt.presentation.SubredditsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -19,6 +21,8 @@ fun SubredditsScreen(viewModel: SubredditsViewModel) {
     val state by viewModel.uiState.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var newSubredditName by remember { mutableStateOf("") }
+    var editingSubreddit by remember { mutableStateOf<Subreddit?>(null) }
+    var editName by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Subreddits") }) },
@@ -51,6 +55,12 @@ fun SubredditsScreen(viewModel: SubredditsViewModel) {
                                     onCheckedChange = { viewModel.setActive(subreddit.id, it) },
                                 )
                                 Spacer(Modifier.width(4.dp))
+                                IconButton(onClick = {
+                                    editingSubreddit = subreddit
+                                    editName = subreddit.name
+                                }) {
+                                    Icon(Icons.Default.Edit, contentDescription = "Edit")
+                                }
                                 IconButton(onClick = { viewModel.remove(subreddit.id) }) {
                                     Icon(Icons.Default.Delete, contentDescription = "Remove")
                                 }
@@ -86,6 +96,33 @@ fun SubredditsScreen(viewModel: SubredditsViewModel) {
             },
             dismissButton = {
                 TextButton(onClick = { showAddDialog = false; newSubredditName = "" }) { Text("Cancel") }
+            }
+        )
+    }
+
+    editingSubreddit?.let { subreddit ->
+        AlertDialog(
+            onDismissRequest = { editingSubreddit = null; editName = "" },
+            title = { Text("Edit Subreddit") },
+            text = {
+                OutlinedTextField(
+                    value = editName,
+                    onValueChange = { editName = it },
+                    label = { Text("Subreddit name") },
+                    singleLine = true,
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (editName.isNotBlank()) {
+                        viewModel.rename(subreddit.id, editName)
+                        editingSubreddit = null
+                        editName = ""
+                    }
+                }) { Text("Save") }
+            },
+            dismissButton = {
+                TextButton(onClick = { editingSubreddit = null; editName = "" }) { Text("Cancel") }
             }
         )
     }
