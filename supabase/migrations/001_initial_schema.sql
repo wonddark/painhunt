@@ -8,9 +8,11 @@ create table settings (
   scraper_base_url text not null default 'http://localhost:3000'
 );
 
+-- Enforce singleton pattern at database level
+create unique index settings_singleton_idx on settings ((1::int));
+
 -- Seed default row on migration
-insert into settings (ollama_api_key, ollama_model, min_upvotes_threshold, scraper_base_url)
-values ('', 'llama3.2', 10, 'http://localhost:3000');
+insert into settings default values;
 
 create table subreddits (
   id uuid primary key default gen_random_uuid(),
@@ -28,7 +30,7 @@ create table ideas (
   url text not null,
   author text not null,
   reddit_score int not null default 0,
-  ai_relevance_score int not null,
+  ai_relevance_score int not null check (ai_relevance_score >= 0 and ai_relevance_score <= 100),
   ai_summary text not null,
   ai_category text not null check (ai_category in ('SaaS','Mobile','Hardware','Service','Other')),
   scraped_at timestamptz not null default now()
@@ -52,3 +54,11 @@ create table notes (
 create index ideas_scraped_at_idx on ideas(scraped_at desc);
 create index ideas_ai_relevance_idx on ideas(ai_relevance_score desc);
 create index ideas_category_idx on ideas(ai_category);
+
+-- Composite index for primary query pattern (category + sort)
+create index ideas_category_sort_idx on ideas(ai_category, scraped_at desc, ai_relevance_score desc);
+
+-- Foreign key indexes (PostgreSQL doesn't auto-create these)
+create index ideas_subreddit_id_idx on ideas(subreddit_id);
+create index bookmarks_idea_id_idx on bookmarks(idea_id);
+create index notes_idea_id_idx on notes(idea_id);
