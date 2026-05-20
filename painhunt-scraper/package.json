@@ -1,0 +1,23 @@
+{
+  "name": "painhunt-scraper",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file=.env dist/index.js",
+    "dev": "tsx --env-file=.env src/index.ts",
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "@supabase/supabase-js": "^2.49.9",
+    "dotenv": "^16.5.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "@types/node": "^22.15.18",
+    "@types/express": "^5.0.3",
+    "vitest": "^3.2.2",
+    "tsx": "^4.19.4"
+  }
+}
