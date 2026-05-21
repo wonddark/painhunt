@@ -13,7 +13,9 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -96,6 +98,9 @@ class FeedViewModel(
                 val response = httpClient.post("$scraperBaseUrl/scrape/upload") {
                     contentType(ContentType.Application.Json)
                     setBody(bytes)
+                }
+                if (!response.status.isSuccess()) {
+                    throw IOException("Server error ${response.status.value}: ${response.bodyAsText()}")
                 }
                 val body = response.bodyAsText()
                 _uiState.update { it.copy(isUploading = false, scrapeResult = body) }

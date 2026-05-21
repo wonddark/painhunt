@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { runScrape } from '../src/pipeline.js'
+import { runScrape, runScrapeFromPosts } from '../src/pipeline.js'
 
 vi.mock('../src/reddit/client.js', () => ({
   fetchSubredditPosts: vi.fn().mockResolvedValue([
@@ -25,6 +25,7 @@ vi.mock('../src/db/supabase.js', () => ({
   }),
   getActiveSubreddits: vi.fn().mockResolvedValue([{ id: 'sub1', name: 'SomebodyMakeThis', active: true, added_at: '2026-01-01' }]),
   upsertIdea: vi.fn().mockResolvedValue(undefined),
+  upsertSubredditByName: vi.fn().mockResolvedValue({ id: 'sub1', name: 'SomebodyMakeThis', active: true, added_at: '2026-01-01' }),
 }))
 
 describe('runScrape', () => {
@@ -36,5 +37,23 @@ describe('runScrape', () => {
     // p3: score 3 < 10 → discarded (upvote threshold)
     expect(result.inserted).toBe(1)
     expect(result.discarded).toBe(2)
+  })
+})
+
+describe('runScrapeFromPosts', () => {
+  it('returns zero counts immediately for empty posts array', async () => {
+    const result = await runScrapeFromPosts([], 'SomebodyMakeThis')
+    expect(result).toEqual({ inserted: 0, discarded: 0 })
+  })
+
+  it('processes posts through the pipeline', async () => {
+    const posts = [
+      { id: 'p1', title: 'I wish there was an app for this', selftext: '', score: 15, author: 'u1', permalink: '/r/test/p1' },
+      { id: 'p2', title: 'Cool project launch', selftext: '', score: 100, author: 'u2', permalink: '/r/test/p2' },
+    ]
+    const result = await runScrapeFromPosts(posts, 'SomebodyMakeThis')
+    // p1: has pain signal → inserted; p2: no pain signal → discarded
+    expect(result.inserted).toBe(1)
+    expect(result.discarded).toBe(1)
   })
 })

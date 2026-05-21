@@ -23,6 +23,10 @@ router.post('/scrape', async (_req, res) => {
 router.post('/scrape/upload', async (req, res) => {
   try {
     const { posts, subredditName } = parseRedditJson(req.body)
+    if (posts.length === 0) {
+      res.json({ inserted: 0, discarded: 0 })
+      return
+    }
     if (!subredditName) {
       res.status(400).json({ error: 'Invalid Reddit JSON format' })
       return
