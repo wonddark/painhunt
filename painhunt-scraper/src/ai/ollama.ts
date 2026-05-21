@@ -54,7 +54,6 @@ export async function scorePost(input: ScoreInput): Promise<ScoreResult | null> 
     }
 
     const data = (await res.json()) as { message: { content: string } }
-    console.debug(data)
     const raw = data.message.content.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim()
     const parsed = JSON.parse(raw) as {
       relevance_score: number
