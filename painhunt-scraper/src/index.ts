@@ -3,7 +3,7 @@ import express from 'express'
 import { router } from './api/routes.js'
 
 const app = express()
-app.use(express.json())
+app.use(express.json({ limit: '5mb' }))
 app.use(router)
 
 const port = parseInt(process.env.PORT ?? '3000', 10)

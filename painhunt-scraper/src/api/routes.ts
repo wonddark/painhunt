@@ -1,6 +1,7 @@
 // src/api/routes.ts
 import { Router } from 'express'
-import { runScrape } from '../pipeline.js'
+import { runScrape, runScrapeFromPosts } from '../pipeline.js'
+import { parseRedditJson } from '../reddit/client.js'
 
 export const router = Router()
 
@@ -15,6 +16,22 @@ router.post('/scrape', async (_req, res) => {
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     console.error('Scrape failed:', message)
+    res.status(500).json({ error: message })
+  }
+})
+
+router.post('/scrape/upload', async (req, res) => {
+  try {
+    const { posts, subredditName } = parseRedditJson(req.body)
+    if (!subredditName) {
+      res.status(400).json({ error: 'Invalid Reddit JSON format' })
+      return
+    }
+    const result = await runScrapeFromPosts(posts, subredditName)
+    res.json(result)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    console.error('Upload scrape failed:', message)
     res.status(500).json({ error: message })
   }
 })
