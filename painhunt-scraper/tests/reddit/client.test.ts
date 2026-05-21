@@ -3,20 +3,24 @@ import { fetchSubredditPosts, parseRedditJson } from '../../src/reddit/client.js
 
 vi.stubGlobal('fetch', vi.fn())
 
-const mockPost = (id: string, score: number, title: string, selftext = '') => ({
-  data: { id, score, title, selftext, author: 'user1', permalink: `/r/test/comments/${id}` },
-})
+const atomFeed = (ids: string[]) => `<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+${ids.map((id) => `  <entry>
+    <id>t3_${id}</id>
+    <title>Post ${id}</title>
+    <content></content>
+    <author><name>/u/user1</name></author>
+    <link href="https://www.reddit.com/r/test/comments/${id}/post_${id}/"/>
+  </entry>`).join('\n')}
+</feed>`
 
 describe('fetchSubredditPosts', () => {
   beforeEach(() => vi.mocked(fetch).mockReset())
 
   it('returns deduplicated posts from new and hot', async () => {
-    const newPosts = { data: { children: [mockPost('a1', 20, 'Post A'), mockPost('b1', 5, 'Post B')] } }
-    const hotPosts = { data: { children: [mockPost('a1', 20, 'Post A'), mockPost('c1', 50, 'Post C')] } }
-
     vi.mocked(fetch)
-      .mockResolvedValueOnce({ ok: true, json: async () => newPosts } as Response)
-      .mockResolvedValueOnce({ ok: true, json: async () => hotPosts } as Response)
+      .mockResolvedValueOnce({ ok: true, text: async () => atomFeed(['a1', 'b1']) } as Response)
+      .mockResolvedValueOnce({ ok: true, text: async () => atomFeed(['a1', 'c1']) } as Response)
 
     const posts = await fetchSubredditPosts('testsubreddit')
 
