@@ -18,7 +18,7 @@ vi.mock('@supabase/supabase-js', () => ({
 }))
 
 // Now we can safely import
-import { getActiveSubreddits, getSettings, upsertIdea } from '../../src/db/supabase.js'
+import { getActiveSubreddits, getSettings, upsertIdea, upsertSubredditByName } from '../../src/db/supabase.js'
 
 describe('getActiveSubreddits', () => {
   beforeEach(() => {
@@ -86,5 +86,43 @@ describe('upsertIdea', () => {
         ai_category: 'SaaS',
       })
     ).resolves.not.toThrow()
+  })
+})
+
+describe('upsertSubredditByName', () => {
+  beforeEach(() => {
+    mockFromFn.mockClear()
+  })
+
+  it('returns existing subreddit when found', async () => {
+    const existing = { id: 'sub1', name: 'entrepreneur', active: true, added_at: '2026-01-01' }
+    mockFromFn.mockReturnValueOnce({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValueOnce({ data: existing, error: null }),
+    })
+
+    const result = await upsertSubredditByName('entrepreneur')
+    expect(result).toEqual(existing)
+  })
+
+  it('inserts and returns new subreddit when not found', async () => {
+    const inserted = { id: 'sub2', name: 'startups', active: true, added_at: '2026-01-01' }
+    mockFromFn
+      .mockReturnValueOnce({
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        maybeSingle: vi.fn().mockResolvedValueOnce({ data: null, error: null }),
+      })
+      .mockReturnValueOnce({
+        insert: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValueOnce({ data: inserted, error: null }),
+          }),
+        }),
+      })
+
+    const result = await upsertSubredditByName('startups')
+    expect(result).toEqual(inserted)
   })
 })

@@ -61,3 +61,21 @@ export async function upsertIdea(idea: IdeaInsert): Promise<void> {
     .upsert(idea, { onConflict: 'reddit_post_id', ignoreDuplicates: true })
   if (error) throwDbError(error)
 }
+
+export async function upsertSubredditByName(name: string): Promise<Subreddit> {
+  const { data: existing } = await client
+    .from('subreddits')
+    .select()
+    .eq('name', name)
+    .maybeSingle()
+
+  if (existing) return existing as Subreddit
+
+  const { data, error } = await client
+    .from('subreddits')
+    .insert({ name, active: true })
+    .select()
+    .single()
+  if (error) throwDbError(error)
+  return data as Subreddit
+}
