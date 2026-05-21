@@ -42,7 +42,7 @@ async function fetchWithRetry(url: string, attempt = 0): Promise<Response> {
 }
 
 async function fetchListing(subreddit: string, sort: 'new' | 'hot'): Promise<RedditPost[]> {
-  const url = `https://www.reddit.com/r/${subreddit}/${sort}.rss?limit=100`
+  const url = `https://www.reddit.com/r/${subreddit}/${sort}.json?limit=100`
   const res = await fetchWithRetry(url)
 
   if (!res.ok) {
@@ -69,6 +69,42 @@ async function fetchListing(subreddit: string, sort: 'new' | 'hot'): Promise<Red
       permalink,
     }
   })
+}
+
+export type ParsedRedditData = {
+  posts: RedditPost[]
+  subredditName: string
+}
+
+export function parseRedditJson(json: unknown): ParsedRedditData {
+  const children = (json as any)?.data?.children
+  if (!Array.isArray(children) || children.length === 0) {
+    return { posts: [], subredditName: '' }
+  }
+
+  const seen = new Set<string>()
+  const posts: RedditPost[] = []
+  let subredditName = ''
+
+  for (const child of children) {
+    const d = child?.data
+    if (!d || typeof d.id !== 'string') continue
+    if (seen.has(d.id)) continue
+    seen.add(d.id)
+    if (!subredditName && typeof d.subreddit === 'string') {
+      subredditName = d.subreddit
+    }
+    posts.push({
+      id: d.id,
+      title: typeof d.title === 'string' ? d.title : String(d.title ?? ''),
+      selftext: typeof d.selftext === 'string' ? d.selftext : '',
+      author: typeof d.author === 'string' ? d.author : '',
+      score: typeof d.score === 'number' ? d.score : 0,
+      permalink: typeof d.permalink === 'string' ? d.permalink : '',
+    })
+  }
+
+  return { posts, subredditName }
 }
 
 export async function fetchSubredditPosts(subreddit: string): Promise<RedditPost[]> {
