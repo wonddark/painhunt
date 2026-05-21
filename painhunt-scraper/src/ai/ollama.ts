@@ -54,7 +54,9 @@ export async function scorePost(input: ScoreInput): Promise<ScoreResult | null> 
     }
 
     const data = (await res.json()) as { message: { content: string } }
-    const parsed = JSON.parse(data.message.content) as {
+    console.debug(data)
+    const raw = data.message.content.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim()
+    const parsed = JSON.parse(raw) as {
       relevance_score: number
       summary: string
       category: string
@@ -73,7 +75,8 @@ export async function scorePost(input: ScoreInput): Promise<ScoreResult | null> 
       summary: parsed.summary,
       category: parsed.category,
     }
-  } catch {
+  } catch (e) {
+    console.error(e)
     console.warn('Ollama scoring failed, discarding post')
     return null
   }
