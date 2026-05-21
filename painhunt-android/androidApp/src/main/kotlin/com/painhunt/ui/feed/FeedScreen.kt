@@ -1,5 +1,8 @@
 package com.painhunt.ui.feed
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.painhunt.data.SortField
 import com.painhunt.presentation.FeedViewModel
@@ -22,13 +26,21 @@ private val CATEGORIES = listOf(null, "SaaS", "Mobile", "Hardware", "Service", "
 @Composable
 fun FeedScreen(viewModel: FeedViewModel, onIdeaClick: (String) -> Unit) {
     val state by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    val fileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        if (uri != null) viewModel.uploadFile(context, uri)
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("PainHunt") },
                 actions = {
-                    IconButton(onClick = viewModel::triggerScrape, enabled = !state.isScraping) {
+                    IconButton(
+                        onClick = viewModel::triggerScrape,
+                        enabled = !state.isScraping && !state.isUploading,
+                    ) {
                         if (state.isScraping) {
                             CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                         } else {
@@ -70,10 +82,24 @@ fun FeedScreen(viewModel: FeedViewModel, onIdeaClick: (String) -> Unit) {
                 }
             }
 
+            OutlinedButton(
+                onClick = { fileLauncher.launch("application/json") },
+                enabled = !state.isUploading && !state.isScraping,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+            ) {
+                if (state.isUploading) {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                    Spacer(Modifier.width(8.dp))
+                }
+                Text("Import File")
+            }
+
             if (state.error != null) {
                 Row(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         state.error!!,
