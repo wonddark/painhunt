@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import com.painhunt.presentation.SettingsViewModel
 import kotlinx.coroutines.delay
 
-private val OLLAMA_MODELS = listOf("llama3.2", "llama3.1", "mistral", "phi3", "gemma2")
+private val OLLAMA_MODELS = listOf("gemma4:31b-cloud")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
