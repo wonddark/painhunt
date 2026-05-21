@@ -94,29 +94,35 @@ describe('upsertSubredditByName', () => {
     mockFromFn.mockClear()
   })
 
-  it('upserts and returns the subreddit row', async () => {
-    const row = { id: 'sub1', name: 'entrepreneur', active: true, added_at: '2026-01-01' }
+  it('returns existing subreddit when found', async () => {
+    const existing = { id: 'sub1', name: 'entrepreneur', active: true, added_at: '2026-01-01' }
     mockFromFn.mockReturnValueOnce({
-      upsert: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValueOnce({ data: row, error: null }),
-        }),
-      }),
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValueOnce({ data: existing, error: null }),
     })
 
     const result = await upsertSubredditByName('entrepreneur')
-    expect(result).toEqual(row)
+    expect(result).toEqual(existing)
   })
 
-  it('throws on database error', async () => {
-    mockFromFn.mockReturnValueOnce({
-      upsert: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValueOnce({ data: null, error: { message: 'unique violation' } }),
+  it('inserts and returns new subreddit when not found', async () => {
+    const inserted = { id: 'sub2', name: 'startups', active: true, added_at: '2026-01-01' }
+    mockFromFn
+      .mockReturnValueOnce({
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        maybeSingle: vi.fn().mockResolvedValueOnce({ data: null, error: null }),
+      })
+      .mockReturnValueOnce({
+        insert: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValueOnce({ data: inserted, error: null }),
+          }),
         }),
-      }),
-    })
+      })
 
-    await expect(upsertSubredditByName('startups')).rejects.toThrow('unique violation')
+    const result = await upsertSubredditByName('startups')
+    expect(result).toEqual(inserted)
   })
 })
