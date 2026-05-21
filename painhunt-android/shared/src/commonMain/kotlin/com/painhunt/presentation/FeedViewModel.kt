@@ -1,5 +1,7 @@
 package com.painhunt.presentation
 
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.painhunt.data.IdeasRepository
@@ -8,17 +10,22 @@ import com.painhunt.data.SortField
 import com.painhunt.domain.Idea
 import io.ktor.client.HttpClient
 import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.IOException
 
 data class FeedUiState(
     val ideas: List<Idea> = emptyList(),
     val isLoading: Boolean = false,
     val isScraping: Boolean = false,
+    val isUploading: Boolean = false,
     val sortBy: SortField = SortField.ScrapedAt,
     val selectedCategory: String? = null,
     val error: String? = null,
@@ -75,6 +82,26 @@ class FeedViewModel(
                 loadIdeas()
             } catch (e: Exception) {
                 _uiState.update { it.copy(isScraping = false, error = "Scraper offline: ${e.message}") }
+            }
+        }
+    }
+
+    fun uploadFile(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isUploading = true, scrapeResult = null) }
+            try {
+                val bytes = context.contentResolver.openInputStream(uri)?.readBytes()
+                    ?: throw IOException("Cannot read file")
+                val scraperBaseUrl = settingsRepository.get().scraperBaseUrl
+                val response = httpClient.post("$scraperBaseUrl/scrape/upload") {
+                    contentType(ContentType.Application.Json)
+                    setBody(bytes)
+                }
+                val body = response.bodyAsText()
+                _uiState.update { it.copy(isUploading = false, scrapeResult = body) }
+                loadIdeas()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isUploading = false, error = "Upload failed: ${e.message}") }
             }
         }
     }
