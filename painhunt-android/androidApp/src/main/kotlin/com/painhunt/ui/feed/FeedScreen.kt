@@ -9,8 +9,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
@@ -46,13 +47,13 @@ fun FeedScreen(
                 title = { Text("PainHunt") },
                 actions = {
                     IconButton(
-                        onClick = viewModel::triggerScrape,
-                        enabled = !state.isScraping && !state.isUploading,
+                        onClick = { fileLauncher.launch("application/json") },
+                        enabled = !state.isUploading && !state.isScraping,
                     ) {
-                        if (state.isScraping) {
+                        if (state.isUploading) {
                             CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                         } else {
-                            Icon(Icons.Default.Refresh, contentDescription = "Scrape")
+                            Icon(Icons.Default.FileUpload, contentDescription = "Import File")
                         }
                     }
                     Box {
@@ -63,6 +64,16 @@ fun FeedScreen(
                             expanded = menuExpanded,
                             onDismissRequest = { menuExpanded = false },
                         ) {
+                            DropdownMenuItem(
+                                text = { Text("Refresh") },
+                                onClick = {
+                                    viewModel.triggerScrape()
+                                    menuExpanded = false
+                                },
+                                leadingIcon = { Icon(Icons.Default.Refresh, contentDescription = null) },
+                                enabled = !state.isScraping && !state.isUploading,
+                            )
+                            HorizontalDivider()
                             DropdownMenuItem(
                                 text = { Text("Sort", style = MaterialTheme.typography.labelSmall) },
                                 onClick = {},
@@ -123,20 +134,6 @@ fun FeedScreen(
                         label = { Text(cat ?: "All") },
                     )
                 }
-            }
-
-            OutlinedButton(
-                onClick = { fileLauncher.launch("application/json") },
-                enabled = !state.isUploading && !state.isScraping,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-            ) {
-                if (state.isUploading) {
-                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-                    Spacer(Modifier.width(8.dp))
-                }
-                Text("Import File")
             }
 
             if (state.error != null) {
