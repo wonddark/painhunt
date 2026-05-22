@@ -25,6 +25,7 @@ android {
         buildConfigField("String", "SUPABASE_URL", "\"${localProperties.getProperty("SUPABASE_URL", "")}\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"${localProperties.getProperty("SUPABASE_ANON_KEY", "")}\"")
         buildConfigField("String", "SCRAPER_BASE_URL", "\"${localProperties.getProperty("SCRAPER_BASE_URL", "http://localhost:3000")}\"")
+        buildConfigField("String", "MODELS_LIST", "\"${localProperties.getProperty("MODELS_LIST", "gtp-oss:20b,gemma4:31b-cloud")}\"")
     }
 
     buildTypes {

@@ -11,10 +11,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.painhunt.app.BuildConfig
 import com.painhunt.presentation.SettingsViewModel
 import kotlinx.coroutines.delay
 
-private val OLLAMA_MODELS = listOf("gemma4:31b-cloud")
+private val OLLAMA_MODELS = BuildConfig.MODELS_LIST.split(",")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
