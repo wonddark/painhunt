@@ -42,6 +42,7 @@ fun SettingsScreen(viewModel: SettingsViewModel, onBack: () -> Unit) {
         topBar = {
             TopAppBar(
                 title = { Text("Settings") },
+                windowInsets = WindowInsets(0),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

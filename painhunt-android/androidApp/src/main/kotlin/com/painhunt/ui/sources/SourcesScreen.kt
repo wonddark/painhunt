@@ -29,6 +29,7 @@ fun SourcesScreen(viewModel: SourcesViewModel, onBack: () -> Unit) {
         topBar = {
             TopAppBar(
                 title = { Text("Sources") },
+                windowInsets = WindowInsets(0),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

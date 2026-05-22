@@ -38,6 +38,7 @@ fun IdeaDetailScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Idea Detail") },
+                windowInsets = WindowInsets(0),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

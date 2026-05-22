@@ -50,6 +50,7 @@ fun ImplementingDetailScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Implementation Plan") },
+                windowInsets = WindowInsets(0),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

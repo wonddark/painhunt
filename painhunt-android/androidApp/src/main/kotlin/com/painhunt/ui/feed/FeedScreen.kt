@@ -45,6 +45,7 @@ fun FeedScreen(
         topBar = {
             TopAppBar(
                 title = { Text("PainHunt") },
+                windowInsets = WindowInsets(0),
                 actions = {
                     IconButton(
                         onClick = { fileLauncher.launch("application/json") },

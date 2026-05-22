@@ -22,7 +22,7 @@ fun ImplementingListScreen(
     val state by viewModel.uiState.collectAsState()
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Implementing") }) },
+        topBar = { TopAppBar(title = { Text("Implementing") }, windowInsets = WindowInsets(0)) },
     ) { padding ->
         when {
             state.isLoading -> {
