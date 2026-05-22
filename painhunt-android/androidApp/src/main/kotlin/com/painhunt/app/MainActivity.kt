@@ -22,25 +22,33 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.painhunt.data.BookmarksRepository
 import com.painhunt.data.IdeasRepository
+import com.painhunt.data.ImplementationsRepository
 import com.painhunt.data.SettingsRepository
 import com.painhunt.data.SourcesRepository
 import com.painhunt.data.SupabaseClientProvider
 import com.painhunt.presentation.FeedViewModel
 import com.painhunt.presentation.IdeaDetailViewModel
+import com.painhunt.presentation.ImplementingDetailViewModel
+import com.painhunt.presentation.ImplementingListViewModel
 import com.painhunt.presentation.SettingsViewModel
 import com.painhunt.presentation.SourcesViewModel
 import com.painhunt.ui.detail.IdeaDetailScreen
 import com.painhunt.ui.feed.FeedScreen
+import com.painhunt.ui.implementing.ImplementingDetailScreen
+import com.painhunt.ui.implementing.ImplementingListScreen
 import com.painhunt.ui.settings.SettingsScreen
 import com.painhunt.ui.offline.OfflineScreen
 import com.painhunt.ui.sources.SourcesScreen
 import com.painhunt.ui.theme.PainHuntTheme
+import androidx.compose.material.icons.filled.Build
 import kotlinx.serialization.Serializable
 
 @Serializable object FeedRoute
 @Serializable object SourcesRoute
 @Serializable object SettingsRoute
 @Serializable data class DetailRoute(val ideaId: String)
+@Serializable object ImplementingRoute
+@Serializable data class ImplementingDetailRoute(val implementationId: String)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,6 +59,7 @@ class MainActivity : ComponentActivity() {
         val bookmarksRepo = BookmarksRepository(supabase)
         val sourcesRepo = SourcesRepository(supabase)
         val settingsRepo = SettingsRepository(supabase)
+        val implementationsRepo = ImplementationsRepository(supabase)
 
         setContent {
             PainHuntTheme {
@@ -72,6 +81,12 @@ class MainActivity : ComponentActivity() {
                                 icon = { Icon(Icons.Default.Home, null) },
                                 label = { Text("Feed") },
                             )
+                            NavigationBarItem(
+                                selected = backStack?.destination?.hasRoute(ImplementingRoute::class) == true,
+                                onClick = { navController.navigate(ImplementingRoute) { launchSingleTop = true } },
+                                icon = { Icon(Icons.Default.Build, null) },
+                                label = { Text("Implementing") },
+                            )
                         }
                     }
                 ) { innerPadding ->
@@ -91,8 +106,13 @@ class MainActivity : ComponentActivity() {
                         }
                         composable<DetailRoute> { entry ->
                             val route = entry.toRoute<DetailRoute>()
-                            val vm = viewModel { IdeaDetailViewModel(ideasRepo, bookmarksRepo) }
-                            IdeaDetailScreen(route.ideaId, vm) { navController.popBackStack() }
+                            val vm = viewModel { IdeaDetailViewModel(ideasRepo, bookmarksRepo, settingsRepo, implementationsRepo) }
+                            IdeaDetailScreen(
+                                ideaId = route.ideaId,
+                                viewModel = vm,
+                                onBack = { navController.popBackStack() },
+                                onNavigateToImplementation = { implId -> navController.navigate(ImplementingDetailRoute(implId)) },
+                            )
                         }
                         composable<SourcesRoute> {
                             val vm = viewModel { SourcesViewModel(sourcesRepo) }
@@ -101,6 +121,15 @@ class MainActivity : ComponentActivity() {
                         composable<SettingsRoute> {
                             val vm = viewModel { SettingsViewModel(settingsRepo) }
                             SettingsScreen(vm, onBack = { navController.popBackStack() })
+                        }
+                        composable<ImplementingRoute> {
+                            val vm = viewModel { ImplementingListViewModel(implementationsRepo) }
+                            ImplementingListScreen(vm) { id -> navController.navigate(ImplementingDetailRoute(id)) }
+                        }
+                        composable<ImplementingDetailRoute> { entry ->
+                            val route = entry.toRoute<ImplementingDetailRoute>()
+                            val vm = viewModel { ImplementingDetailViewModel(implementationsRepo, ideasRepo) }
+                            ImplementingDetailScreen(route.implementationId, vm) { navController.popBackStack() }
                         }
                     }
                 }
