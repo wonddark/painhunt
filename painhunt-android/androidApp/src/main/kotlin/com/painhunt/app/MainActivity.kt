@@ -4,9 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -67,18 +65,6 @@ class MainActivity : ComponentActivity() {
                                 icon = { Icon(Icons.Default.Home, null) },
                                 label = { Text("Feed") },
                             )
-                            NavigationBarItem(
-                                selected = backStack?.destination?.hasRoute(SubredditsRoute::class) == true,
-                                onClick = { navController.navigate(SubredditsRoute) { launchSingleTop = true } },
-                                icon = { Icon(Icons.AutoMirrored.Filled.List, null) },
-                                label = { Text("Subreddits") },
-                            )
-                            NavigationBarItem(
-                                selected = backStack?.destination?.hasRoute(SettingsRoute::class) == true,
-                                onClick = { navController.navigate(SettingsRoute) { launchSingleTop = true } },
-                                icon = { Icon(Icons.Default.Settings, null) },
-                                label = { Text("Settings") },
-                            )
                         }
                     }
                 ) { innerPadding ->
@@ -89,7 +75,12 @@ class MainActivity : ComponentActivity() {
                     ) {
                         composable<FeedRoute> {
                             val vm = viewModel { FeedViewModel(ideasRepo, settingsRepo) }
-                            FeedScreen(vm) { ideaId -> navController.navigate(DetailRoute(ideaId)) }
+                            FeedScreen(
+                                viewModel = vm,
+                                onIdeaClick = { ideaId -> navController.navigate(DetailRoute(ideaId)) },
+                                onSubreddits = { navController.navigate(SubredditsRoute) { launchSingleTop = true } },
+                                onSettings = { navController.navigate(SettingsRoute) { launchSingleTop = true } },
+                            )
                         }
                         composable<DetailRoute> { entry ->
                             val route = entry.toRoute<DetailRoute>()
