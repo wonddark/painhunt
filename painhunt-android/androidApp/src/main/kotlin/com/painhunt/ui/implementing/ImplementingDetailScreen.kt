@@ -49,7 +49,7 @@ fun ImplementingDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(state.implementation?.concept ?: "") },
+                title = { Text("Implementation Plan") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -86,6 +86,8 @@ fun ImplementingDetailScreen(
                 ) {
                     item {
                         Spacer(Modifier.height(8.dp))
+                        Text(impl.concept, style = MaterialTheme.typography.titleLarge)
+                        Spacer(Modifier.height(4.dp))
                         Text(impl.description, style = MaterialTheme.typography.bodyMedium)
                         Spacer(Modifier.height(8.dp))
                         LinearProgressIndicator(
