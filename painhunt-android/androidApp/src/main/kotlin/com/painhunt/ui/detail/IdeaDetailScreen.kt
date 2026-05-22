@@ -24,6 +24,7 @@ fun IdeaDetailScreen(
     ideaId: String,
     viewModel: IdeaDetailViewModel,
     onBack: () -> Unit,
+    onNavigateToImplementation: (String) -> Unit,
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -124,6 +125,34 @@ fun IdeaDetailScreen(
                 },
                 modifier = Modifier.fillMaxWidth(),
             ) { Text("Save Notes") }
+
+            HorizontalDivider()
+
+            when {
+                state.isStartingImplementation -> {
+                    Button(
+                        onClick = {},
+                        enabled = false,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Generating plan...")
+                    }
+                }
+                state.isImplementing -> {
+                    FilledTonalButton(
+                        onClick = { onNavigateToImplementation(state.implementationId!!) },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text("View implementation") }
+                }
+                else -> {
+                    Button(
+                        onClick = viewModel::startImplementing,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text("Implement this") }
+                }
+            }
 
             if (state.error != null) {
                 Text(state.error!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
