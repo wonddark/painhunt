@@ -23,21 +23,21 @@ import androidx.navigation.toRoute
 import com.painhunt.data.BookmarksRepository
 import com.painhunt.data.IdeasRepository
 import com.painhunt.data.SettingsRepository
-import com.painhunt.data.SubredditsRepository
+import com.painhunt.data.SourcesRepository
 import com.painhunt.data.SupabaseClientProvider
 import com.painhunt.presentation.FeedViewModel
 import com.painhunt.presentation.IdeaDetailViewModel
 import com.painhunt.presentation.SettingsViewModel
-import com.painhunt.presentation.SubredditsViewModel
+import com.painhunt.presentation.SourcesViewModel
 import com.painhunt.ui.detail.IdeaDetailScreen
 import com.painhunt.ui.feed.FeedScreen
 import com.painhunt.ui.settings.SettingsScreen
-import com.painhunt.ui.subreddits.SubredditsScreen
+import com.painhunt.ui.sources.SourcesScreen
 import com.painhunt.ui.theme.PainHuntTheme
 import kotlinx.serialization.Serializable
 
 @Serializable object FeedRoute
-@Serializable object SubredditsRoute
+@Serializable object SourcesRoute
 @Serializable object SettingsRoute
 @Serializable data class DetailRoute(val ideaId: String)
 
@@ -48,7 +48,7 @@ class MainActivity : ComponentActivity() {
         val supabase = SupabaseClientProvider.create(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
         val ideasRepo = IdeasRepository(supabase)
         val bookmarksRepo = BookmarksRepository(supabase)
-        val subredditsRepo = SubredditsRepository(supabase)
+        val sourcesRepo = SourcesRepository(supabase)
         val settingsRepo = SettingsRepository(supabase)
 
         setContent {
@@ -78,7 +78,7 @@ class MainActivity : ComponentActivity() {
                             FeedScreen(
                                 viewModel = vm,
                                 onIdeaClick = { ideaId -> navController.navigate(DetailRoute(ideaId)) },
-                                onSubreddits = { navController.navigate(SubredditsRoute) { launchSingleTop = true } },
+                                onSources = { navController.navigate(SourcesRoute) { launchSingleTop = true } },
                                 onSettings = { navController.navigate(SettingsRoute) { launchSingleTop = true } },
                             )
                         }
@@ -87,13 +87,13 @@ class MainActivity : ComponentActivity() {
                             val vm = viewModel { IdeaDetailViewModel(ideasRepo, bookmarksRepo) }
                             IdeaDetailScreen(route.ideaId, vm) { navController.popBackStack() }
                         }
-                        composable<SubredditsRoute> {
-                            val vm = viewModel { SubredditsViewModel(subredditsRepo) }
-                            SubredditsScreen(vm)
+                        composable<SourcesRoute> {
+                            val vm = viewModel { SourcesViewModel(sourcesRepo) }
+                            SourcesScreen(vm, onBack = { navController.popBackStack() })
                         }
                         composable<SettingsRoute> {
                             val vm = viewModel { SettingsViewModel(settingsRepo) }
-                            SettingsScreen(vm)
+                            SettingsScreen(vm, onBack = { navController.popBackStack() })
                         }
                     }
                 }

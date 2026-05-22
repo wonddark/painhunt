@@ -1,9 +1,10 @@
-package com.painhunt.ui.subreddits
+package com.painhunt.ui.sources
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -13,26 +14,35 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.painhunt.domain.Subreddit
-import com.painhunt.presentation.SubredditsViewModel
+import com.painhunt.presentation.SourcesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SubredditsScreen(viewModel: SubredditsViewModel) {
+fun SourcesScreen(viewModel: SourcesViewModel, onBack: () -> Unit) {
     val state by viewModel.uiState.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
-    var newSubredditName by remember { mutableStateOf("") }
-    var editingSubreddit by remember { mutableStateOf<Subreddit?>(null) }
+    var newSourceName by remember { mutableStateOf("") }
+    var editingSource by remember { mutableStateOf<Subreddit?>(null) }
     var editName by remember { mutableStateOf("") }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Subreddits") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Sources") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Add subreddit")
+                Icon(Icons.Default.Add, contentDescription = "Add source")
             }
         }
     ) { padding ->
-        if (state.isLoading && state.subreddits.isEmpty()) {
+        if (state.isLoading && state.sources.isEmpty()) {
             Box(modifier = Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
@@ -45,23 +55,23 @@ fun SubredditsScreen(viewModel: SubredditsViewModel) {
             }
         } else {
             LazyColumn(modifier = Modifier.padding(padding)) {
-                items(state.subreddits, key = { it.id }) { subreddit ->
+                items(state.sources, key = { it.id }) { source ->
                     ListItem(
-                        headlineContent = { Text("r/${subreddit.name}") },
+                        headlineContent = { Text("r/${source.name}") },
                         trailingContent = {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Switch(
-                                    checked = subreddit.active,
-                                    onCheckedChange = { viewModel.setActive(subreddit.id, it) },
+                                    checked = source.active,
+                                    onCheckedChange = { viewModel.setActive(source.id, it) },
                                 )
                                 Spacer(Modifier.width(4.dp))
                                 IconButton(onClick = {
-                                    editingSubreddit = subreddit
-                                    editName = subreddit.name
+                                    editingSource = source
+                                    editName = source.name
                                 }) {
                                     Icon(Icons.Default.Edit, contentDescription = "Edit")
                                 }
-                                IconButton(onClick = { viewModel.remove(subreddit.id) }) {
+                                IconButton(onClick = { viewModel.remove(source.id) }) {
                                     Icon(Icons.Default.Delete, contentDescription = "Remove")
                                 }
                             }
@@ -75,54 +85,54 @@ fun SubredditsScreen(viewModel: SubredditsViewModel) {
 
     if (showAddDialog) {
         AlertDialog(
-            onDismissRequest = { showAddDialog = false; newSubredditName = "" },
-            title = { Text("Add Subreddit") },
+            onDismissRequest = { showAddDialog = false; newSourceName = "" },
+            title = { Text("Add Source") },
             text = {
                 OutlinedTextField(
-                    value = newSubredditName,
-                    onValueChange = { newSubredditName = it },
-                    label = { Text("Subreddit name (e.g. SomebodyMakeThis)") },
+                    value = newSourceName,
+                    onValueChange = { newSourceName = it },
+                    label = { Text("Source name (e.g. SomebodyMakeThis)") },
                     singleLine = true,
                 )
             },
             confirmButton = {
                 TextButton(onClick = {
-                    if (newSubredditName.isNotBlank()) {
-                        viewModel.add(newSubredditName)
+                    if (newSourceName.isNotBlank()) {
+                        viewModel.add(newSourceName)
                         showAddDialog = false
-                        newSubredditName = ""
+                        newSourceName = ""
                     }
                 }) { Text("Add") }
             },
             dismissButton = {
-                TextButton(onClick = { showAddDialog = false; newSubredditName = "" }) { Text("Cancel") }
+                TextButton(onClick = { showAddDialog = false; newSourceName = "" }) { Text("Cancel") }
             }
         )
     }
 
-    editingSubreddit?.let { subreddit ->
+    editingSource?.let { source ->
         AlertDialog(
-            onDismissRequest = { editingSubreddit = null; editName = "" },
-            title = { Text("Edit Subreddit") },
+            onDismissRequest = { editingSource = null; editName = "" },
+            title = { Text("Edit Source") },
             text = {
                 OutlinedTextField(
                     value = editName,
                     onValueChange = { editName = it },
-                    label = { Text("Subreddit name (without r/ prefix)") },
+                    label = { Text("Source name (without r/ prefix)") },
                     singleLine = true,
                 )
             },
             confirmButton = {
                 TextButton(onClick = {
                     if (editName.isNotBlank()) {
-                        viewModel.rename(subreddit.id, editName)
-                        editingSubreddit = null
+                        viewModel.rename(source.id, editName)
+                        editingSource = null
                         editName = ""
                     }
                 }) { Text("Save") }
             },
             dismissButton = {
-                TextButton(onClick = { editingSubreddit = null; editName = "" }) { Text("Cancel") }
+                TextButton(onClick = { editingSource = null; editName = "" }) { Text("Cancel") }
             }
         )
     }

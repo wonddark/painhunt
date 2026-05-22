@@ -7,7 +7,7 @@ import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-class SubredditsRepository(private val client: SupabaseClient) {
+class SourcesRepository(private val client: SupabaseClient) {
 
     @Serializable
     private data class SubredditInsert(val name: String)

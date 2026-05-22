@@ -29,7 +29,7 @@ private val CATEGORIES = listOf(null, "SaaS", "Mobile", "Hardware", "Service", "
 fun FeedScreen(
     viewModel: FeedViewModel,
     onIdeaClick: (String) -> Unit,
-    onSubreddits: () -> Unit,
+    onSources: () -> Unit,
     onSettings: () -> Unit,
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -90,9 +90,9 @@ fun FeedScreen(
                             )
                             HorizontalDivider()
                             DropdownMenuItem(
-                                text = { Text("Subreddits") },
+                                text = { Text("Sources") },
                                 onClick = {
-                                    onSubreddits()
+                                    onSources()
                                     menuExpanded = false
                                 },
                             )
