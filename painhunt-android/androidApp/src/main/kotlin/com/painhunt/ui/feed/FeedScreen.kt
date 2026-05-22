@@ -136,12 +136,14 @@ fun FeedScreen(
                 }
             }
 
-            Text(
-                text = "${state.ideas.size} ${if (state.ideas.size == 1) "item" else "items"}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-            )
+            if (!state.isLoading && state.error == null) {
+                Text(
+                    text = "${state.ideas.size} ${if (state.ideas.size == 1) "item" else "items"}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                )
+            }
 
             if (state.error != null) {
                 Row(
