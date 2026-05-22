@@ -32,6 +32,7 @@ import com.painhunt.presentation.SourcesViewModel
 import com.painhunt.ui.detail.IdeaDetailScreen
 import com.painhunt.ui.feed.FeedScreen
 import com.painhunt.ui.settings.SettingsScreen
+import com.painhunt.ui.offline.OfflineScreen
 import com.painhunt.ui.sources.SourcesScreen
 import com.painhunt.ui.theme.PainHuntTheme
 import kotlinx.serialization.Serializable
@@ -53,6 +54,12 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             PainHuntTheme {
+                val (isOnline, retryConnection) = rememberIsOnline()
+                if (!isOnline) {
+                    OfflineScreen(onRetry = retryConnection)
+                    return@PainHuntTheme
+                }
+
                 val navController = rememberNavController()
                 val backStack by navController.currentBackStackEntryAsState()
 
