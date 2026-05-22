@@ -69,8 +69,9 @@ export async function planImplementation(input: PlanInput): Promise<PlanResult |
       return null
     }
 
-    const data = (await res.json()) as { message: { content: string } }
-    const raw = data.message.content
+    const data = await res.json()
+    if (typeof data?.message?.content !== 'string') return null
+    const raw = (data.message.content as string)
       .replace(/^```(?:json)?\s*/i, '')
       .replace(/```\s*$/i, '')
       .trim()
