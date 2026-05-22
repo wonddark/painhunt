@@ -64,7 +64,7 @@ router.post('/implement', async (req, res) => {
       bodyExcerpt: bodyExcerpt ?? '',
       model: settings.ollama_model,
       apiKey: settings.ollama_api_key,
-      baseUrl: settings.scraper_base_url,
+      baseUrl: process.env.OLLAMA_BASE_URL ?? 'https://api.ollama.com',
     })
 
     if (!plan) {
