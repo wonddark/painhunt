@@ -10,6 +10,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,9 +26,15 @@ private val CATEGORIES = listOf(null, "SaaS", "Mobile", "Hardware", "Service", "
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FeedScreen(viewModel: FeedViewModel, onIdeaClick: (String) -> Unit) {
+fun FeedScreen(
+    viewModel: FeedViewModel,
+    onIdeaClick: (String) -> Unit,
+    onSubreddits: () -> Unit,
+    onSettings: () -> Unit,
+) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    var menuExpanded by remember { mutableStateOf(false) }
 
     val fileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         if (uri != null) viewModel.uploadFile(context, uri)
@@ -47,26 +55,61 @@ fun FeedScreen(viewModel: FeedViewModel, onIdeaClick: (String) -> Unit) {
                             Icon(Icons.Default.Refresh, contentDescription = "Scrape")
                         }
                     }
+                    Box {
+                        IconButton(onClick = { menuExpanded = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "Menu")
+                        }
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = { menuExpanded = false },
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Sort", style = MaterialTheme.typography.labelSmall) },
+                                onClick = {},
+                                enabled = false,
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Newest") },
+                                onClick = {
+                                    viewModel.setSortBy(SortField.ScrapedAt)
+                                    menuExpanded = false
+                                },
+                                leadingIcon = if (state.sortBy == SortField.ScrapedAt) {
+                                    { Icon(Icons.Default.Check, contentDescription = null) }
+                                } else null,
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Top") },
+                                onClick = {
+                                    viewModel.setSortBy(SortField.Relevance)
+                                    menuExpanded = false
+                                },
+                                leadingIcon = if (state.sortBy == SortField.Relevance) {
+                                    { Icon(Icons.Default.Check, contentDescription = null) }
+                                } else null,
+                            )
+                            HorizontalDivider()
+                            DropdownMenuItem(
+                                text = { Text("Subreddits") },
+                                onClick = {
+                                    onSubreddits()
+                                    menuExpanded = false
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Settings") },
+                                onClick = {
+                                    onSettings()
+                                    menuExpanded = false
+                                },
+                            )
+                        }
+                    }
                 }
             )
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            Row(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                FilterChip(
-                    selected = state.sortBy == SortField.ScrapedAt,
-                    onClick = { viewModel.setSortBy(SortField.ScrapedAt) },
-                    label = { Text("Newest") },
-                )
-                FilterChip(
-                    selected = state.sortBy == SortField.Relevance,
-                    onClick = { viewModel.setSortBy(SortField.Relevance) },
-                    label = { Text("Top") },
-                )
-            }
             Row(
                 modifier = Modifier
                     .padding(horizontal = 16.dp)
