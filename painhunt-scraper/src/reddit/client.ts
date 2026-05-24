@@ -24,7 +24,7 @@ type AtomFeed = {
 const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' })
 
 function stripHtml(html: string): string {
-  return html.replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&quot;/g, '"').trim()
+  return html.replaceAll(/<[^>]+>/g, '').replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&amp;', '&').replaceAll('&#39;', "'").replaceAll('&quot;', '"').trim()
 }
 
 async function fetchWithRetry(url: string, attempt = 0): Promise<Response> {
@@ -76,32 +76,63 @@ export type ParsedRedditData = {
   subredditName: string
 }
 
-export function parseRedditJson(json: unknown): ParsedRedditData {
-  const children = (json as any)?.data?.children
-  if (!Array.isArray(children) || children.length === 0) {
-    return { posts: [], subredditName: '' }
+type RedditJsonChild = {
+  data?: Record<string, unknown>
+}
+
+function getRedditChildren(json: unknown): RedditJsonChild[] {
+  const children = (json as { data?: { children?: unknown } })?.data?.children
+  return Array.isArray(children) ? children : []
+}
+
+function getString(value: unknown, fallback = ''): string {
+  return typeof value === 'string' ? value : fallback
+}
+
+function getTitle(value: unknown): string {
+  return typeof value === 'string' ? value : String(value ?? '')
+}
+
+function getScore(value: unknown): number {
+  return typeof value === 'number' ? value : 0
+}
+
+function toRedditPost(data: Record<string, unknown>): RedditPost | null {
+  if (typeof data.id !== 'string') {
+    return null
   }
 
+  return {
+    id: data.id,
+    title: getTitle(data.title),
+    selftext: getString(data.selftext),
+    author: getString(data.author),
+    score: getScore(data.score),
+    permalink: getString(data.permalink),
+  }
+}
+
+function getSubredditName(currentName: string, data: Record<string, unknown>): string {
+  return currentName || getString(data.subreddit)
+}
+
+export function parseRedditJson(json: unknown): ParsedRedditData {
+  const children = getRedditChildren(json)
   const seen = new Set<string>()
   const posts: RedditPost[] = []
   let subredditName = ''
 
   for (const child of children) {
-    const d = child?.data
-    if (!d || typeof d.id !== 'string') continue
-    if (seen.has(d.id)) continue
-    seen.add(d.id)
-    if (!subredditName && typeof d.subreddit === 'string') {
-      subredditName = d.subreddit
+    const data = child?.data ??{}
+    const post = data ? toRedditPost(data) : null
+
+    if (!post || seen.has(post.id)) {
+      continue
     }
-    posts.push({
-      id: d.id,
-      title: typeof d.title === 'string' ? d.title : String(d.title ?? ''),
-      selftext: typeof d.selftext === 'string' ? d.selftext : '',
-      author: typeof d.author === 'string' ? d.author : '',
-      score: typeof d.score === 'number' ? d.score : 0,
-      permalink: typeof d.permalink === 'string' ? d.permalink : '',
-    })
+
+    seen.add(post.id)
+    subredditName = getSubredditName(subredditName, data)
+    posts.push(post)
   }
 
   return { posts, subredditName }
