@@ -20,6 +20,22 @@ export type Settings = {
   scraper_base_url: string
 }
 
+export type ChatIdeaContext = {
+  title: string
+  ai_summary: string
+  body_excerpt: string | null
+}
+
+export async function getIdeaById(id: string): Promise<ChatIdeaContext> {
+  const { data, error } = await client
+    .from('ideas')
+    .select('title, ai_summary, body_excerpt')
+    .eq('id', id)
+    .single()
+  if (error) throwDbError(error)
+  return data as ChatIdeaContext
+}
+
 export type IdeaInsert = {
   reddit_post_id: string
   subreddit_id: string
