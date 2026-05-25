@@ -24,7 +24,7 @@ class ChatRepository(private val client: SupabaseClient) {
 
     suspend fun insertMessage(ideaId: String, role: ChatRole, content: String): ChatMessage =
         client.from("chat_messages")
-            .insert(Insert(ideaId, role.name, content)) {
+            .insert(Insert(ideaId, role.name.lowercase(), content)) {
                 select()
             }
             .decodeSingle()
