@@ -28,6 +28,11 @@ export async function streamIdeaChat(
   const fullMessages = buildChatMessages(idea, messages)
 
   const ollamaBaseUrl = process.env.OLLAMA_BASE_URL ?? 'https://api.ollama.com'
+
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Connection', 'keep-alive')
+
   const ollamaRes = await fetch(`${ollamaBaseUrl}/api/chat`, {
     method: 'POST',
     headers: {
@@ -45,10 +50,6 @@ export async function streamIdeaChat(
     throw new Error(`Ollama error: ${ollamaRes.status}`)
   }
 
-  res.setHeader('Content-Type', 'text/event-stream')
-  res.setHeader('Cache-Control', 'no-cache')
-  res.setHeader('Connection', 'keep-alive')
-
   const reader = ollamaRes.body.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
@@ -64,6 +65,7 @@ export async function streamIdeaChat(
     }
   }
 
+  buffer += decoder.decode()
   if (buffer.trim()) res.write(`data: ${buffer}\n\n`)
   res.write('data: [DONE]\n\n')
   res.end()
