@@ -21,12 +21,14 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.painhunt.data.BookmarksRepository
+import com.painhunt.data.ChatRepository
 import com.painhunt.data.IdeasRepository
 import com.painhunt.data.ImplementationsRepository
 import com.painhunt.data.SettingsRepository
 import com.painhunt.data.SourcesRepository
 import com.painhunt.data.SupabaseClientProvider
 import com.painhunt.presentation.FeedViewModel
+import com.painhunt.presentation.IdeaChatViewModel
 import com.painhunt.presentation.IdeaDetailViewModel
 import com.painhunt.presentation.ImplementingDetailViewModel
 import com.painhunt.presentation.ImplementingListViewModel
@@ -57,6 +59,7 @@ class MainActivity : ComponentActivity() {
         val supabase = SupabaseClientProvider.create(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
         val ideasRepo = IdeasRepository(supabase)
         val bookmarksRepo = BookmarksRepository(supabase)
+        val chatRepo = ChatRepository(supabase)
         val sourcesRepo = SourcesRepository(supabase)
         val settingsRepo = SettingsRepository(supabase)
         val implementationsRepo = ImplementationsRepository(supabase)
@@ -107,9 +110,11 @@ class MainActivity : ComponentActivity() {
                         composable<DetailRoute> { entry ->
                             val route = entry.toRoute<DetailRoute>()
                             val vm = viewModel { IdeaDetailViewModel(ideasRepo, bookmarksRepo, settingsRepo, implementationsRepo) }
+                            val chatVm = viewModel { IdeaChatViewModel(chatRepo, settingsRepo) }
                             IdeaDetailScreen(
                                 ideaId = route.ideaId,
                                 viewModel = vm,
+                                chatViewModel = chatVm,
                                 onBack = { navController.popBackStack() },
                                 onNavigateToImplementation = { implId -> navController.navigate(ImplementingDetailRoute(implId)) },
                             )
