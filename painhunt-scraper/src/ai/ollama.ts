@@ -15,7 +15,10 @@ export type ScoreResult = {
 const VALID_CATEGORIES = new Set(['SaaS', 'Mobile', 'Hardware', 'Service', 'Other'])
 
 const PROMPT = (title: string, body: string) => `
-You are analyzing a Reddit post to determine if it describes a genuine business pain point.
+You are analyzing a Reddit post to determine if it describes a genuine not-solved user pain point.
+Your goal is to provide a critical and realistic analysis on the feasibility and profitability of building a business solution to address the pain point.
+All pain points that requires a non-software-like solution must be ignored.
+If the post is a self-promotion (the author is describing the point just to point out he/she already built the solution) it should be ignored unless the pain point score is over 90.
 
 Post title: "${title}"
 Post body: "${body.slice(0, 800)}"
