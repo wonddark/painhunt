@@ -109,12 +109,18 @@ fun IdeaDetailScreen(
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
+                    text = { Text("Notes") },
+                )
+                Tab(
+                    selected = selectedTab == 2,
+                    onClick = { selectedTab = 2 },
                     text = { Text("Discuss") },
                 )
             }
             when (selectedTab) {
                 0 -> OverviewContent(state, viewModel, onNavigateToImplementation)
-                1 -> ChatContent(
+                1 -> NotesContent(state, viewModel)
+                2 -> ChatContent(
                     chatState = chatState,
                     onSend = { text -> chatViewModel.send(ideaId, text) },
                 )
@@ -130,10 +136,6 @@ private fun OverviewContent(
     onNavigateToImplementation: (String) -> Unit,
 ) {
     val idea = state.idea ?: return
-    var noteText by remember(state.note) { mutableStateOf(state.note?.content ?: "") }
-    var tagsText by remember(state.note) {
-        mutableStateOf(state.note?.tags?.joinToString(", ") ?: "")
-    }
 
     Column(
         modifier = Modifier
@@ -158,29 +160,6 @@ private fun OverviewContent(
                 )
             }
         }
-        HorizontalDivider()
-        Text("Notes", style = MaterialTheme.typography.titleSmall)
-        OutlinedTextField(
-            value = noteText,
-            onValueChange = { noteText = it },
-            label = { Text("Your notes") },
-            modifier = Modifier.fillMaxWidth(),
-            minLines = 3,
-        )
-        OutlinedTextField(
-            value = tagsText,
-            onValueChange = { tagsText = it },
-            label = { Text("Tags (comma-separated)") },
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Button(
-            onClick = {
-                val tags = tagsText.split(",").map { it.trim() }.filter { it.isNotBlank() }
-                viewModel.saveNote(noteText, tags)
-            },
-            modifier = Modifier.fillMaxWidth(),
-        ) { Text("Save Notes") }
-
         HorizontalDivider()
 
         when {
@@ -216,6 +195,45 @@ private fun OverviewContent(
                 style = MaterialTheme.typography.bodySmall,
             )
         }
+    }
+}
+
+@Composable
+private fun NotesContent(
+    state: IdeaDetailUiState,
+    viewModel: IdeaDetailViewModel,
+) {
+    var noteText by remember(state.note) { mutableStateOf(state.note?.content ?: "") }
+    var tagsText by remember(state.note) {
+        mutableStateOf(state.note?.tags?.joinToString(", ") ?: "")
+    }
+
+    Column(
+        modifier = Modifier
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        OutlinedTextField(
+            value = noteText,
+            onValueChange = { noteText = it },
+            label = { Text("Your notes") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3,
+        )
+        OutlinedTextField(
+            value = tagsText,
+            onValueChange = { tagsText = it },
+            label = { Text("Tags (comma-separated)") },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Button(
+            onClick = {
+                val tags = tagsText.split(",").map { it.trim() }.filter { it.isNotBlank() }
+                viewModel.saveNote(noteText, tags)
+            },
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text("Save Notes") }
     }
 }
 
