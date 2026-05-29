@@ -29,3 +29,4 @@ dependencyResolutionManagement {
 rootProject.name = "painhunt-android"
 include(":shared")
 include(":androidApp")
+include(":desktopApp")
