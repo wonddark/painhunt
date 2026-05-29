@@ -59,22 +59,23 @@ val generateAppConfig by tasks.registering {
     val supabaseAnonKey = props.getProperty("SUPABASE_ANON_KEY", "")
     val scraperBaseUrl = props.getProperty("SCRAPER_BASE_URL", "http://localhost:3000")
     val modelsList = props.getProperty("MODELS_LIST", "gtp-oss:20b,gemma4:31b-cloud")
-    inputs.property("supabaseUrl", supabaseUrl)
-    inputs.property("supabaseAnonKey", supabaseAnonKey)
-    inputs.property("scraperBaseUrl", scraperBaseUrl)
-    inputs.property("modelsList", modelsList)
+    inputs.property("supabaseUrl", supabaseUrl.hashCode())
+    inputs.property("supabaseAnonKey", supabaseAnonKey.hashCode())
+    inputs.property("scraperBaseUrl", scraperBaseUrl.hashCode())
+    inputs.property("modelsList", modelsList.hashCode())
     doLast {
         val dir = outputDir.get().asFile.resolve("com/painhunt/desktop")
         dir.mkdirs()
+        fun String.esc() = replace("\\", "\\\\").replace("\"", "\\\"").replace("\$", "\\\$")
         dir.resolve("AppConfig.kt").writeText(
             """
             package com.painhunt.desktop
 
             object AppConfig {
-                const val SUPABASE_URL = "$supabaseUrl"
-                const val SUPABASE_ANON_KEY = "$supabaseAnonKey"
-                const val SCRAPER_BASE_URL = "$scraperBaseUrl"
-                const val MODELS_LIST = "$modelsList"
+                const val SUPABASE_URL = "${supabaseUrl.esc()}"
+                const val SUPABASE_ANON_KEY = "${supabaseAnonKey.esc()}"
+                const val SCRAPER_BASE_URL = "${scraperBaseUrl.esc()}"
+                const val MODELS_LIST = "${modelsList.esc()}"
             }
             """.trimIndent() + "\n"
         )

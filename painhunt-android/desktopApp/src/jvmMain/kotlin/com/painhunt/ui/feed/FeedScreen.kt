@@ -18,9 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.rememberCoroutineScope
 import com.painhunt.desktop.platform.pickJsonFileBytes
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import com.painhunt.data.SortField
 import com.painhunt.presentation.FeedViewModel
 
@@ -47,7 +45,7 @@ fun FeedScreen(
                     IconButton(
                         onClick = {
                             scope.launch {
-                                val bytes = withContext(Dispatchers.IO) { pickJsonFileBytes() }
+                                val bytes = pickJsonFileBytes()
                                 if (bytes != null) viewModel.uploadFile(bytes)
                             }
                         },

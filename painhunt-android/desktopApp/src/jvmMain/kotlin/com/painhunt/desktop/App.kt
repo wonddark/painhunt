@@ -62,13 +62,12 @@ class AppRepositories(
 @Composable
 fun App(repos: AppRepositories) {
     PainHuntTheme {
+        val navController = rememberNavController()
         val (isOnline, retryConnection) = rememberIsOnline()
         if (!isOnline) {
             OfflineScreen(onRetry = retryConnection)
             return@PainHuntTheme
         }
-
-        val navController = rememberNavController()
         val backStack by navController.currentBackStackEntryAsState()
 
         Scaffold(
