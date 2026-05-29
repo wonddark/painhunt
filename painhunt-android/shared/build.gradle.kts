@@ -15,6 +15,16 @@ kotlin {
         }
     }
 
+    jvm("desktop") {
+        compilations.all {
+            compileTaskProvider.configure {
+                compilerOptions {
+                    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+                }
+            }
+        }
+    }
+
     sourceSets {
         commonMain.dependencies {
             implementation(libs.coroutines.core)
@@ -28,6 +38,12 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.coroutines.android)
             implementation(libs.ktor.client.okhttp)
+        }
+
+        val desktopMain by getting
+        desktopMain.dependencies {
+            implementation(libs.ktor.client.cio)
+            implementation(libs.coroutines.core)
         }
 
         commonTest.dependencies {

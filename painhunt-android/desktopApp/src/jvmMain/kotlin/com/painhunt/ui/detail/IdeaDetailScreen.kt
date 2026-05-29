@@ -1,0 +1,344 @@
+package com.painhunt.ui.detail
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.OpenInBrowser
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.painhunt.desktop.platform.openUrl
+import com.painhunt.domain.ChatRole
+import com.painhunt.presentation.IdeaChatUiState
+import com.painhunt.presentation.IdeaChatViewModel
+import com.painhunt.presentation.IdeaDetailUiState
+import com.painhunt.presentation.IdeaDetailViewModel
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun IdeaDetailScreen(
+    ideaId: String,
+    viewModel: IdeaDetailViewModel,
+    chatViewModel: IdeaChatViewModel,
+    onBack: () -> Unit,
+    onNavigateToImplementation: (String) -> Unit,
+) {
+    val state by viewModel.uiState.collectAsState()
+    val chatState by chatViewModel.uiState.collectAsState()
+
+    LaunchedEffect(ideaId) { viewModel.load(ideaId) }
+    LaunchedEffect(ideaId) { chatViewModel.load(ideaId) }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Idea Detail") },
+                windowInsets = WindowInsets(0),
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    state.idea?.let { idea ->
+                        IconButton(onClick = {
+                            openUrl(idea.url)
+                        }) {
+                            Icon(Icons.Default.OpenInBrowser, contentDescription = "Open in Reddit")
+                        }
+                        IconButton(onClick = viewModel::toggleBookmark) {
+                            Icon(
+                                if (state.isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                                contentDescription = "Bookmark",
+                            )
+                        }
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        if (state.isLoading) {
+            Box(
+                modifier = Modifier.padding(padding).fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator()
+            }
+            return@Scaffold
+        }
+
+        if (state.error != null && state.idea == null) {
+            Box(
+                modifier = Modifier.padding(padding).fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    state.error!!,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+            return@Scaffold
+        }
+
+        state.idea ?: return@Scaffold
+
+        var selectedTab by remember { mutableIntStateOf(0) }
+
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize(),
+        ) {
+            TabRow(selectedTabIndex = selectedTab) {
+                Tab(
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 },
+                    text = { Text("Overview") },
+                )
+                Tab(
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 },
+                    text = { Text("Discuss") },
+                )
+            }
+            when (selectedTab) {
+                0 -> OverviewContent(state, viewModel, onNavigateToImplementation)
+                1 -> ChatContent(
+                    chatState = chatState,
+                    onSend = { text -> chatViewModel.send(ideaId, text) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun OverviewContent(
+    state: IdeaDetailUiState,
+    viewModel: IdeaDetailViewModel,
+    onNavigateToImplementation: (String) -> Unit,
+) {
+    val idea = state.idea ?: return
+    var noteText by remember(state.note) { mutableStateOf(state.note?.content ?: "") }
+    var tagsText by remember(state.note) {
+        mutableStateOf(state.note?.tags?.joinToString(", ") ?: "")
+    }
+
+    Column(
+        modifier = Modifier
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            AssistChip(onClick = {}, label = { Text(idea.aiCategory) })
+            AssistChip(onClick = {}, label = { Text("Score ${idea.aiRelevanceScore}%") })
+            AssistChip(onClick = {}, label = { Text("↑${idea.redditScore}") })
+        }
+        Text(idea.title, style = MaterialTheme.typography.titleLarge)
+        Text(idea.aiSummary, style = MaterialTheme.typography.bodyMedium)
+        idea.bodyExcerpt?.let { body ->
+            if (body.isNotBlank()) {
+                HorizontalDivider()
+                Text(
+                    body,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        HorizontalDivider()
+        Text("Notes", style = MaterialTheme.typography.titleSmall)
+        OutlinedTextField(
+            value = noteText,
+            onValueChange = { noteText = it },
+            label = { Text("Your notes") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3,
+        )
+        OutlinedTextField(
+            value = tagsText,
+            onValueChange = { tagsText = it },
+            label = { Text("Tags (comma-separated)") },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Button(
+            onClick = {
+                val tags = tagsText.split(",").map { it.trim() }.filter { it.isNotBlank() }
+                viewModel.saveNote(noteText, tags)
+            },
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text("Save Notes") }
+
+        HorizontalDivider()
+
+        when {
+            state.isStartingImplementation -> {
+                Button(
+                    onClick = {},
+                    enabled = false,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Generating plan...")
+                }
+            }
+            state.isImplementing -> {
+                FilledTonalButton(
+                    onClick = { onNavigateToImplementation(state.implementationId!!) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text("View implementation") }
+            }
+            else -> {
+                Button(
+                    onClick = viewModel::startImplementing,
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text("Implement this") }
+            }
+        }
+
+        if (state.error != null) {
+            Text(
+                state.error!!,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ChatContent(
+    chatState: IdeaChatUiState,
+    onSend: (String) -> Unit,
+) {
+    var inputText by remember { mutableStateOf("") }
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(chatState.messages.size) {
+        if (chatState.messages.isNotEmpty()) {
+            listState.animateScrollToItem(chatState.messages.size - 1)
+        }
+    }
+    LaunchedEffect(chatState.isStreaming) {
+        if (chatState.isStreaming) {
+            listState.animateScrollToItem(chatState.messages.size)
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.weight(1f)) {
+            when {
+                chatState.isLoadingHistory -> {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
+                chatState.messages.isEmpty() && !chatState.isStreaming -> {
+                    Text(
+                        "Ask anything about this idea.",
+                        modifier = Modifier.align(Alignment.Center),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                else -> {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(vertical = 8.dp),
+                    ) {
+                        items(chatState.messages, key = { it.id }) { msg ->
+                            MessageBubble(msg.role, msg.content, false)
+                        }
+                        if (chatState.isStreaming) {
+                            item(key = "streaming") {
+                                MessageBubble(ChatRole.ASSISTANT, chatState.streamingText, true)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (chatState.error != null) {
+            Text(
+                chatState.error!!,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.padding(horizontal = 12.dp),
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .padding(8.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            OutlinedTextField(
+                value = inputText,
+                onValueChange = { inputText = it },
+                placeholder = { Text("Message...") },
+                modifier = Modifier.weight(1f),
+                maxLines = 4,
+            )
+            IconButton(
+                onClick = {
+                    val text = inputText.trim()
+                    if (text.isNotEmpty()) {
+                        onSend(text)
+                        inputText = ""
+                    }
+                },
+                enabled = !chatState.isStreaming && inputText.isNotBlank(),
+            ) {
+                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send")
+            }
+        }
+    }
+}
+
+@Composable
+private fun MessageBubble(role: ChatRole, content: String, streaming: Boolean) {
+    val isUser = role == ChatRole.USER
+    val displayText = when {
+        streaming && content.isEmpty() -> "▌"
+        streaming -> "$content▌"
+        else -> content
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start,
+    ) {
+        Surface(
+            shape = MaterialTheme.shapes.medium,
+            color = if (isUser)
+                MaterialTheme.colorScheme.primaryContainer
+            else
+                MaterialTheme.colorScheme.surfaceVariant,
+            modifier = Modifier.widthIn(max = 280.dp),
+        ) {
+            Text(
+                text = displayText,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+    }
+}

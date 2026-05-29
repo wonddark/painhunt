@@ -1,7 +1,5 @@
 package com.painhunt.presentation
 
-import android.content.Context
-import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.painhunt.data.IdeasRepository
@@ -21,7 +19,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.io.IOException
 
 data class FeedUiState(
     val ideas: List<Idea> = emptyList(),
@@ -88,19 +85,17 @@ class FeedViewModel(
         }
     }
 
-    fun uploadFile(context: Context, uri: Uri) {
+    fun uploadFile(bytes: ByteArray) {
         viewModelScope.launch {
             _uiState.update { it.copy(isUploading = true, scrapeResult = null) }
             try {
-                val bytes = context.contentResolver.openInputStream(uri)?.readBytes()
-                    ?: throw IOException("Cannot read file")
                 val scraperBaseUrl = settingsRepository.get().scraperBaseUrl
                 val response = httpClient.post("$scraperBaseUrl/scrape/upload") {
                     contentType(ContentType.Application.Json)
                     setBody(bytes)
                 }
                 if (!response.status.isSuccess()) {
-                    throw IOException("Server error ${response.status.value}: ${response.bodyAsText()}")
+                    throw Exception("Server error ${response.status.value}: ${response.bodyAsText()}")
                 }
                 val body = response.bodyAsText()
                 _uiState.update { it.copy(isUploading = false, scrapeResult = body) }
@@ -111,6 +106,7 @@ class FeedViewModel(
         }
     }
 
+    fun setError(message: String) = _uiState.update { it.copy(error = message) }
     fun clearError() = _uiState.update { it.copy(error = null) }
 
     override fun onCleared() {

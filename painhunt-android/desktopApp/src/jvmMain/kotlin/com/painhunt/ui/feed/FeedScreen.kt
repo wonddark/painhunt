@@ -1,8 +1,5 @@
 package com.painhunt.ui.feed
 
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,8 +15,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.rememberCoroutineScope
+import com.painhunt.desktop.platform.pickJsonFileBytes
+import kotlinx.coroutines.launch
 import com.painhunt.data.SortField
 import com.painhunt.presentation.FeedViewModel
 
@@ -34,15 +33,8 @@ fun FeedScreen(
     onSettings: () -> Unit,
 ) {
     val state by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
     var menuExpanded by remember { mutableStateOf(false) }
-
-    val fileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        if (uri != null) {
-            val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
-            if (bytes != null) viewModel.uploadFile(bytes) else viewModel.setError("Cannot read selected file")
-        }
-    }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -51,7 +43,12 @@ fun FeedScreen(
                 windowInsets = WindowInsets(0),
                 actions = {
                     IconButton(
-                        onClick = { fileLauncher.launch("application/json") },
+                        onClick = {
+                            scope.launch {
+                                val bytes = pickJsonFileBytes()
+                                if (bytes != null) viewModel.uploadFile(bytes)
+                            }
+                        },
                         enabled = !state.isUploading && !state.isScraping,
                     ) {
                         if (state.isUploading) {
