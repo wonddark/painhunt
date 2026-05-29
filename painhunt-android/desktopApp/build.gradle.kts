@@ -25,6 +25,7 @@ kotlin {
             implementation(libs.lifecycle.viewmodel.compose.mp)
 
             implementation(libs.coroutines.core)
+            implementation(libs.coroutines.swing)
             implementation(libs.serialization.json)
             implementation(libs.ktor.client.core)
             implementation(libs.supabase.postgrest)
