@@ -20,9 +20,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownColor
 import com.mikepenz.markdown.m3.markdownTypography
+import com.mikepenz.markdown.model.MarkdownTypography
 import com.painhunt.domain.ChatRole
 import com.painhunt.presentation.IdeaChatUiState
 import com.painhunt.presentation.IdeaChatViewModel
@@ -367,10 +370,35 @@ private fun MessageBubble(role: ChatRole, content: String, streaming: Boolean) {
                 Markdown(
                     content = displayText,
                     colors = markdownColor(text = MaterialTheme.colorScheme.onSurface),
-                    typography = markdownTypography(),
+                    typography = chatMarkdownTypography(),
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                 )
             }
         }
     }
+}
+
+/**
+ * Markdown typography tuned for compact chat bubbles. Maps headings to the M3
+ * title/body type scale (instead of the library's display* defaults, which are
+ * far too large) and keeps body text at bodyMedium to match the rest of the UI.
+ */
+@Composable
+private fun chatMarkdownTypography(): MarkdownTypography {
+    val type = MaterialTheme.typography
+    return markdownTypography(
+        h1 = type.titleLarge.copy(fontWeight = FontWeight.Bold),
+        h2 = type.titleMedium.copy(fontWeight = FontWeight.Bold),
+        h3 = type.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+        h4 = type.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+        h5 = type.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+        h6 = type.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+        text = type.bodyMedium,
+        paragraph = type.bodyMedium,
+        ordered = type.bodyMedium,
+        bullet = type.bodyMedium,
+        list = type.bodyMedium,
+        code = type.bodySmall.copy(fontFamily = FontFamily.Monospace),
+        inlineCode = type.bodyMedium.copy(fontFamily = FontFamily.Monospace),
+    )
 }
