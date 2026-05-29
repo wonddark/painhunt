@@ -20,13 +20,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import com.mikepenz.markdown.compose.components.MarkdownComponents
+import com.mikepenz.markdown.compose.components.markdownComponents
+import com.mikepenz.markdown.compose.elements.MarkdownTable
+import com.mikepenz.markdown.compose.elements.MarkdownTableBasicText
 import com.mikepenz.markdown.m3.Markdown
+import com.mikepenz.markdown.m3.elements.MarkdownCheckBox
 import com.mikepenz.markdown.m3.markdownColor
 import com.mikepenz.markdown.m3.markdownTypography
 import com.mikepenz.markdown.model.MarkdownTypography
+import com.mikepenz.markdown.model.markdownDimens
 import com.painhunt.domain.ChatRole
+import org.intellij.markdown.ast.ASTNode
+import org.intellij.markdown.flavours.gfm.GFMTokenTypes.CELL
 import com.painhunt.presentation.IdeaChatUiState
 import com.painhunt.presentation.IdeaChatViewModel
 import com.painhunt.presentation.IdeaDetailUiState
@@ -264,6 +274,13 @@ private fun ChatContent(
             listState.animateScrollToItem(chatState.messages.size)
         }
     }
+    // Keep the newest streamed line in view as tokens arrive. A large scroll
+    // offset pins the streaming item to the bottom of the viewport.
+    LaunchedEffect(chatState.streamingText) {
+        if (chatState.isStreaming) {
+            listState.scrollToItem(chatState.messages.size, Int.MAX_VALUE)
+        }
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.weight(1f)) {
@@ -346,7 +363,7 @@ private fun MessageBubble(role: ChatRole, content: String, streaming: Boolean) {
     val displayText = when {
         streaming && content.isEmpty() -> "▌"
         streaming -> "$content▌"
-        else -> content
+        else -> stripLeadingTldr(content)
     }
 
     Row(
@@ -374,6 +391,8 @@ private fun MessageBubble(role: ChatRole, content: String, streaming: Boolean) {
                     content = displayText,
                     colors = markdownColor(text = MaterialTheme.colorScheme.onSurface),
                     typography = chatMarkdownTypography(),
+                    dimens = markdownDimens(tableCellWidth = 300.dp),
+                    components = chatMarkdownComponents(),
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                 )
             }
@@ -404,4 +423,61 @@ private fun chatMarkdownTypography(): MarkdownTypography {
         code = type.bodySmall.copy(fontFamily = FontFamily.Monospace),
         inlineCode = type.bodyMedium.copy(fontFamily = FontFamily.Monospace),
     )
+}
+
+/**
+ * Matches a leading "TL;DR" line/paragraph (optionally as a heading or bold)
+ * up to the first blank line, so the redundant summary the model sometimes
+ * prepends can be dropped from the rendered answer.
+ */
+private val TLDR_REGEX = Regex(
+    "^\\s*(?:#{1,6}\\s*)?(?:\\*\\*|__)?\\s*tl;?dr\\b.*?(?:\\n\\s*\\n|$)",
+    setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL),
+)
+
+private fun stripLeadingTldr(text: String): String =
+    text.replaceFirst(TLDR_REGEX, "").trimStart()
+
+/**
+ * Markdown components tuned for chat. Overrides table rendering so cells wrap
+ * their content (the library clips to a single line by default) and stay within
+ * a 40dp..60dp width. Keeps the m3 checkbox default.
+ */
+@Composable
+private fun chatMarkdownComponents(): MarkdownComponents = markdownComponents(
+    checkbox = { MarkdownCheckBox(it.content, it.node, it.typography.text) },
+    table = { model ->
+        MarkdownTable(
+            content = model.content,
+            node = model.node,
+            style = model.typography.table,
+            headerBlock = { content, header, _, style ->
+                ChatTableRow(content, header, style.copy(fontWeight = FontWeight.Bold))
+            },
+            rowBlock = { content, row, _, style ->
+                ChatTableRow(content, row, style)
+            },
+        )
+    },
+)
+
+@Composable
+private fun ChatTableRow(content: String, rowNode: ASTNode, style: TextStyle) {
+    Row(modifier = Modifier.height(IntrinsicSize.Max)) {
+        rowNode.children.filter { it.type == CELL }.forEach { cell ->
+            Box(
+                modifier = Modifier
+                    .widthIn(min = 120.dp, max = 120.dp)
+                    .padding(horizontal = 6.dp, vertical = 4.dp),
+            ) {
+                MarkdownTableBasicText(
+                    content = content,
+                    cell = cell,
+                    style = style,
+                    maxLines = Int.MAX_VALUE,
+                    overflow = TextOverflow.Clip,
+                )
+            }
+        }
+    }
 }
