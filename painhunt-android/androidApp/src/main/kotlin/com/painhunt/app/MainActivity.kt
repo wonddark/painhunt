@@ -75,21 +75,26 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val backStack by navController.currentBackStackEntryAsState()
 
+                // The detail screen hides the bottom bar to use the full height.
+                val showBottomBar = backStack?.destination?.hasRoute(DetailRoute::class) != true
+
                 Scaffold(
                     bottomBar = {
-                        NavigationBar {
-                            NavigationBarItem(
-                                selected = backStack?.destination?.hasRoute(FeedRoute::class) == true,
-                                onClick = { navController.navigate(FeedRoute) { launchSingleTop = true } },
-                                icon = { Icon(Icons.Default.Home, null) },
-                                label = { Text("Feed") },
-                            )
-                            NavigationBarItem(
-                                selected = backStack?.destination?.hasRoute(ImplementingRoute::class) == true,
-                                onClick = { navController.navigate(ImplementingRoute) { launchSingleTop = true } },
-                                icon = { Icon(Icons.Default.Build, null) },
-                                label = { Text("Implementing") },
-                            )
+                        if (showBottomBar) {
+                            NavigationBar {
+                                NavigationBarItem(
+                                    selected = backStack?.destination?.hasRoute(FeedRoute::class) == true,
+                                    onClick = { navController.navigate(FeedRoute) { launchSingleTop = true } },
+                                    icon = { Icon(Icons.Default.Home, null) },
+                                    label = { Text("Feed") },
+                                )
+                                NavigationBarItem(
+                                    selected = backStack?.destination?.hasRoute(ImplementingRoute::class) == true,
+                                    onClick = { navController.navigate(ImplementingRoute) { launchSingleTop = true } },
+                                    icon = { Icon(Icons.Default.Build, null) },
+                                    label = { Text("Implementing") },
+                                )
+                            }
                         }
                     }
                 ) { innerPadding ->
