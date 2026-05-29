@@ -39,8 +39,8 @@ fun FeedScreen(
 
     val fileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         if (uri != null) {
-            val bytes = context.contentResolver.openInputStream(uri)?.readBytes()
-            if (bytes != null) viewModel.uploadFile(bytes)
+            val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+            if (bytes != null) viewModel.uploadFile(bytes) else viewModel.setError("Cannot read selected file")
         }
     }
 

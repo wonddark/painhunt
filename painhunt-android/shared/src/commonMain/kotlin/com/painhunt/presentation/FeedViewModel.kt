@@ -95,7 +95,7 @@ class FeedViewModel(
                     setBody(bytes)
                 }
                 if (!response.status.isSuccess()) {
-                    throw IllegalStateException("Server error ${response.status.value}: ${response.bodyAsText()}")
+                    throw Exception("Server error ${response.status.value}: ${response.bodyAsText()}")
                 }
                 val body = response.bodyAsText()
                 _uiState.update { it.copy(isUploading = false, scrapeResult = body) }
@@ -106,6 +106,7 @@ class FeedViewModel(
         }
     }
 
+    fun setError(message: String) = _uiState.update { it.copy(error = message) }
     fun clearError() = _uiState.update { it.copy(error = null) }
 
     override fun onCleared() {
