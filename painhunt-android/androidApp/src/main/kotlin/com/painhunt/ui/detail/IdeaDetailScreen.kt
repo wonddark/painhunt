@@ -20,23 +20,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.mikepenz.markdown.compose.components.MarkdownComponents
 import com.mikepenz.markdown.compose.components.markdownComponents
 import com.mikepenz.markdown.compose.elements.MarkdownTable
-import com.mikepenz.markdown.compose.elements.MarkdownTableBasicText
+import com.mikepenz.markdown.compose.elements.MarkdownTableHeader
+import com.mikepenz.markdown.compose.elements.MarkdownTableRow
 import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.elements.MarkdownCheckBox
 import com.mikepenz.markdown.m3.markdownColor
 import com.mikepenz.markdown.m3.markdownTypography
 import com.mikepenz.markdown.model.MarkdownTypography
-import com.mikepenz.markdown.model.markdownDimens
 import com.painhunt.domain.ChatRole
-import org.intellij.markdown.ast.ASTNode
-import org.intellij.markdown.flavours.gfm.GFMTokenTypes.CELL
 import com.painhunt.presentation.IdeaChatUiState
 import com.painhunt.presentation.IdeaChatViewModel
 import com.painhunt.presentation.IdeaDetailUiState
@@ -391,7 +388,6 @@ private fun MessageBubble(role: ChatRole, content: String, streaming: Boolean) {
                     content = displayText,
                     colors = markdownColor(text = MaterialTheme.colorScheme.onSurface),
                     typography = chatMarkdownTypography(),
-                    dimens = markdownDimens(tableCellWidth = 300.dp),
                     components = chatMarkdownComponents(),
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                 )
@@ -440,8 +436,9 @@ private fun stripLeadingTldr(text: String): String =
 
 /**
  * Markdown components tuned for chat. Overrides table rendering so cells wrap
- * their content (the library clips to a single line by default) and stay within
- * a 40dp..60dp width. Keeps the m3 checkbox default.
+ * their content instead of clipping to a single line (the library default).
+ * Columns keep the library's weight-based layout, so they share the available
+ * width evenly and stay aligned across rows. Keeps the m3 checkbox default.
  */
 @Composable
 private fun chatMarkdownComponents(): MarkdownComponents = markdownComponents(
@@ -451,33 +448,26 @@ private fun chatMarkdownComponents(): MarkdownComponents = markdownComponents(
             content = model.content,
             node = model.node,
             style = model.typography.table,
-            headerBlock = { content, header, _, style ->
-                ChatTableRow(content, header, style.copy(fontWeight = FontWeight.Bold))
-            },
-            rowBlock = { content, row, _, style ->
-                ChatTableRow(content, row, style)
-            },
-        )
-    },
-)
-
-@Composable
-private fun ChatTableRow(content: String, rowNode: ASTNode, style: TextStyle) {
-    Row(modifier = Modifier.height(IntrinsicSize.Max)) {
-        rowNode.children.filter { it.type == CELL }.forEach { cell ->
-            Box(
-                modifier = Modifier
-                    .widthIn(min = 120.dp, max = 120.dp)
-                    .padding(horizontal = 6.dp, vertical = 4.dp),
-            ) {
-                MarkdownTableBasicText(
+            headerBlock = { content, header, tableWidth, style ->
+                MarkdownTableHeader(
                     content = content,
-                    cell = cell,
+                    header = header,
+                    tableWidth = tableWidth,
                     style = style,
                     maxLines = Int.MAX_VALUE,
                     overflow = TextOverflow.Clip,
                 )
-            }
-        }
-    }
-}
+            },
+            rowBlock = { content, row, tableWidth, style ->
+                MarkdownTableRow(
+                    content = content,
+                    header = row,
+                    tableWidth = tableWidth,
+                    style = style,
+                    maxLines = Int.MAX_VALUE,
+                    overflow = TextOverflow.Clip,
+                )
+            },
+        )
+    },
+)
