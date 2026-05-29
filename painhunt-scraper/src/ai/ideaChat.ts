@@ -14,7 +14,8 @@ export function buildChatMessages(
 Title: "${idea.title}"
 Summary: "${idea.ai_summary}"
 Original post excerpt: "${idea.body_excerpt ?? ''}"
-Help the user think deeply about this idea.`.trim(),
+Help the user think deeply about this idea.
+Respond directly without a "TL;DR" or summary header.`.trim(),
   }
   return [systemMessage, ...userMessages]
 }
