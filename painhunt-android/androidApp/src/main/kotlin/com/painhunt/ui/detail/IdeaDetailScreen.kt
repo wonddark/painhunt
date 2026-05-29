@@ -350,10 +350,9 @@ private fun MessageBubble(role: ChatRole, content: String, streaming: Boolean) {
         Surface(
             shape = MaterialTheme.shapes.medium,
             color = if (isUser)
-                MaterialTheme.colorScheme.primaryContainer
+                MaterialTheme.colorScheme.surfaceVariant
             else
-                MaterialTheme.colorScheme.surfaceVariant,
-            modifier = Modifier.widthIn(max = 280.dp),
+                MaterialTheme.colorScheme.surfaceDim,
         ) {
             Text(
                 text = displayText,
