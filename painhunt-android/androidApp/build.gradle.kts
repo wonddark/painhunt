@@ -69,6 +69,7 @@ dependencies {
     implementation(libs.navigation.compose)
     implementation(libs.ktor.client.android)
     implementation(libs.supabase.postgrest)
+    implementation(libs.markdown.renderer.m3)
 
     debugImplementation(libs.compose.ui.tooling)
 }

@@ -20,6 +20,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.mikepenz.markdown.m3.Markdown
+import com.mikepenz.markdown.m3.markdownColor
+import com.mikepenz.markdown.m3.markdownTypography
 import com.painhunt.domain.ChatRole
 import com.painhunt.presentation.IdeaChatUiState
 import com.painhunt.presentation.IdeaChatViewModel
@@ -354,11 +357,20 @@ private fun MessageBubble(role: ChatRole, content: String, streaming: Boolean) {
             else
                 MaterialTheme.colorScheme.surfaceDim,
         ) {
-            Text(
-                text = displayText,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                style = MaterialTheme.typography.bodyMedium,
-            )
+            if (isUser) {
+                Text(
+                    text = displayText,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            } else {
+                Markdown(
+                    content = displayText,
+                    colors = markdownColor(text = MaterialTheme.colorScheme.onSurface),
+                    typography = markdownTypography(),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                )
+            }
         }
     }
 }
