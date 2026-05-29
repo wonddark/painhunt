@@ -38,7 +38,10 @@ fun FeedScreen(
     var menuExpanded by remember { mutableStateOf(false) }
 
     val fileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        if (uri != null) viewModel.uploadFile(context, uri)
+        if (uri != null) {
+            val bytes = context.contentResolver.openInputStream(uri)?.readBytes()
+            if (bytes != null) viewModel.uploadFile(bytes)
+        }
     }
 
     Scaffold(
