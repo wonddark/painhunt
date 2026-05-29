@@ -360,7 +360,10 @@ private fun MessageBubble(role: ChatRole, content: String, streaming: Boolean) {
             else
                 MaterialTheme.colorScheme.surfaceDim,
         ) {
-            if (isUser) {
+            // Render finalized assistant messages as markdown. While streaming we
+            // show plain text: re-parsing the markdown on every token causes the
+            // whole tree to rebuild each frame, which makes the bubble flicker.
+            if (isUser || streaming) {
                 Text(
                     text = displayText,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
