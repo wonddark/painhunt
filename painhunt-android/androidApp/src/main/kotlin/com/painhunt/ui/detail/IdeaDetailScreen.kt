@@ -14,6 +14,8 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.OpenInBrowser
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -71,6 +73,12 @@ fun IdeaDetailScreen(
                             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(idea.url)))
                         }) {
                             Icon(Icons.Default.OpenInBrowser, contentDescription = "Open in Reddit")
+                        }
+                        IconButton(onClick = viewModel::toggleHidden) {
+                            Icon(
+                                if (state.isHidden) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                contentDescription = if (state.isHidden) "Unhide" else "Hide",
+                            )
                         }
                         IconButton(onClick = viewModel::toggleBookmark) {
                             Icon(

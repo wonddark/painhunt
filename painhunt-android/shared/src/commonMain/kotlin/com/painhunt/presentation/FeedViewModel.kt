@@ -27,6 +27,7 @@ data class FeedUiState(
     val isUploading: Boolean = false,
     val sortBy: SortField = SortField.ScrapedAt,
     val selectedCategory: String? = null,
+    val showHidden: Boolean = false,
     val error: String? = null,
     val scrapeResult: String? = null,
 )
@@ -41,10 +42,6 @@ class FeedViewModel(
     private val _uiState = MutableStateFlow(FeedUiState())
     val uiState: StateFlow<FeedUiState> = _uiState.asStateFlow()
 
-    init {
-        loadIdeas()
-    }
-
     fun loadIdeas() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
@@ -52,6 +49,7 @@ class FeedViewModel(
                 val ideas = ideasRepository.getIdeas(
                     sortBy = _uiState.value.sortBy,
                     category = _uiState.value.selectedCategory,
+                    visible = !_uiState.value.showHidden,
                 )
                 _uiState.update { it.copy(ideas = ideas, isLoading = false) }
             } catch (e: Exception) {
@@ -67,6 +65,11 @@ class FeedViewModel(
 
     fun setCategory(category: String?) {
         _uiState.update { it.copy(selectedCategory = category) }
+        loadIdeas()
+    }
+
+    fun setShowHidden(showHidden: Boolean) {
+        _uiState.update { it.copy(showHidden = showHidden) }
         loadIdeas()
     }
 

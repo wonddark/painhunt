@@ -27,6 +27,7 @@ import kotlinx.serialization.json.Json
 data class IdeaDetailUiState(
     val idea: Idea? = null,
     val isBookmarked: Boolean = false,
+    val isHidden: Boolean = false,
     val note: Note? = null,
     val isLoading: Boolean = false,
     val isImplementing: Boolean = false,
@@ -67,6 +68,7 @@ class IdeaDetailViewModel(
                     it.copy(
                         idea = idea,
                         isBookmarked = ideaId in bookmarkedIds,
+                        isHidden = !idea.visible,
                         note = note,
                         isLoading = false,
                         isImplementing = existing != null,
@@ -89,6 +91,15 @@ class IdeaDetailViewModel(
                 bookmarksRepository.addBookmark(ideaId)
                 _uiState.update { it.copy(isBookmarked = true) }
             }
+        }
+    }
+
+    fun toggleHidden() {
+        val idea = _uiState.value.idea ?: return
+        val newVisible = _uiState.value.isHidden
+        viewModelScope.launch {
+            ideasRepository.setVisible(idea.id, newVisible)
+            _uiState.update { it.copy(isHidden = !newVisible, idea = idea.copy(visible = newVisible)) }
         }
     }
 

@@ -12,6 +12,7 @@ class IdeasRepository(private val client: SupabaseClient) {
     suspend fun getIdeas(
         sortBy: SortField = SortField.ScrapedAt,
         category: String? = null,
+        visible: Boolean? = null,
         limit: Int = 50,
         offset: Int = 0,
     ): List<Idea> {
@@ -21,7 +22,10 @@ class IdeasRepository(private val client: SupabaseClient) {
         }
         return client.from("ideas").select {
             order(column, Order.DESCENDING)
-            if (category != null) filter { eq("ai_category", category) }
+            filter {
+                if (category != null) eq("ai_category", category)
+                if (visible != null) eq("visible", visible)
+            }
             range(offset.toLong(), (offset + limit - 1).toLong())
         }.decodeList()
     }
@@ -31,4 +35,10 @@ class IdeasRepository(private val client: SupabaseClient) {
             filter { eq("id", id) }
             limit(1)
         }.decodeSingle()
+
+    suspend fun setVisible(ideaId: String, visible: Boolean) {
+        client.from("ideas").update(mapOf("visible" to visible)) {
+            filter { eq("id", ideaId) }
+        }
+    }
 }

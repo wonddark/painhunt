@@ -17,4 +17,5 @@ data class Idea(
     @SerialName("ai_summary") val aiSummary: String,
     @SerialName("ai_category") val aiCategory: String,
     @SerialName("scraped_at") val scrapedAt: String,
+    val visible: Boolean = true,
 )

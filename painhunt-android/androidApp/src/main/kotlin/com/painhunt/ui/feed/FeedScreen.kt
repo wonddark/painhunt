@@ -14,6 +14,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,6 +39,10 @@ fun FeedScreen(
     val context = LocalContext.current
     var menuExpanded by remember { mutableStateOf(false) }
 
+    // Reload whenever the feed is shown (including returning from detail) so
+    // newly hidden ideas drop out of the list.
+    LaunchedEffect(Unit) { viewModel.loadIdeas() }
+
     val fileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         if (uri != null) {
             val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
@@ -47,7 +53,7 @@ fun FeedScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("PainHunt") },
+                title = { Text(if (state.showHidden) "PainHunt · Hidden" else "PainHunt") },
                 windowInsets = WindowInsets(0),
                 actions = {
                     IconButton(
@@ -76,6 +82,20 @@ fun FeedScreen(
                                 },
                                 leadingIcon = { Icon(Icons.Default.Refresh, contentDescription = null) },
                                 enabled = !state.isScraping && !state.isUploading,
+                            )
+                            HorizontalDivider()
+                            DropdownMenuItem(
+                                text = { Text(if (state.showHidden) "Show active" else "Show hidden") },
+                                onClick = {
+                                    viewModel.setShowHidden(!state.showHidden)
+                                    menuExpanded = false
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        if (state.showHidden) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                        contentDescription = null,
+                                    )
+                                },
                             )
                             HorizontalDivider()
                             DropdownMenuItem(
@@ -169,6 +189,10 @@ fun FeedScreen(
             if (state.isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
+                }
+            } else if (state.ideas.isEmpty() && state.showHidden) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No hidden items", style = MaterialTheme.typography.titleMedium)
                 }
             } else if (state.ideas.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
